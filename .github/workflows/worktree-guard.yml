@@ -1,0 +1,29 @@
+name: Worktree Guard
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  worktree-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # tag v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: 检查 PR 来源分支
+        run: |
+          HEAD_REF="${{ github.head_ref }}"
+          if [ "$HEAD_REF" = "main" ] || [ "$HEAD_REF" = "master" ]; then
+            echo "ERROR: PR 来源分支不能是 main/master。"
+            echo "请使用 worktree 分支提交 PR。"
+            exit 1
+          fi
+          echo "worktree-guard: 来源分支 $HEAD_REF，通过。"

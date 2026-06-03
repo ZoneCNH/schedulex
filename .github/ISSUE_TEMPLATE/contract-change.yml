@@ -1,0 +1,39 @@
+name: Contract change
+description: 提议修改 schema、metrics、health 或 release manifest contract
+title: "[contract] "
+labels:
+  - contract
+body:
+  - type: dropdown
+    id: contract
+    attributes:
+      label: Contract
+      options:
+        - errors.schema.json
+        - health.schema.json
+        - metrics.json
+        - release-manifest.schema.json
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: 修改原因
+      description: 说明为什么现有 contract 不足。
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: 兼容性影响
+      description: 说明对生成库和 downstream compatibility 的影响。
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: 验证计划
+      description: 至少包含 `GOWORK=off make contracts` 和相关 gate。
+    validations:
+      required: true

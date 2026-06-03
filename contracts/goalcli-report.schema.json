@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xlib-standard.local/contracts/goalcli-report.schema.json",
+  "title": "goalcli report",
+  "type": "object",
+  "required": ["command", "status"],
+  "properties": {
+    "command": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "enum": ["passed", "failed", "planned", "gap"]},
+    "details": {"type": "array", "items": {"type": "string"}},
+    "gaps": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false
+}

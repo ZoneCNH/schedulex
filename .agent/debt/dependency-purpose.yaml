@@ -1,0 +1,8 @@
+schema_version: dependency-purpose/v1
+module: github.com/ZoneCNH/xlib-standard
+policy:
+  require_purpose_for_new_dependencies: true
+  adr_required_for_new_runtime_dependency: true
+approved_dependencies:
+  - module: golang.org/x/tools
+    purpose: static analysis and repository tooling

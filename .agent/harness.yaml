@@ -1,0 +1,193 @@
+schema_version: "3.1"
+module: "xlib-standard"
+default_env:
+  GOWORK: "off"
+required_gates:
+  - id: fmt
+    command: "make fmt"
+    purpose: "Go formatting"
+  - id: vet
+    command: "make vet"
+    purpose: "Go static analysis"
+  - id: lint
+    command: "make lint"
+    purpose: "golangci-lint required; missing tool fails"
+  - id: test
+    command: "make test"
+    purpose: "unit tests and example smoke"
+  - id: race
+    command: "make race"
+    purpose: "race detector"
+  - id: docs_check
+    command: "GOWORK=off make docs-check"
+    purpose: "required docs, links, v3.1 runtime and release protocol"
+  - id: debt
+    command: "GOWORK=off make debt"
+    purpose: "release-blocking debt governance gate"
+  - id: debt_evidence
+    command: "GOWORK=off make debt-evidence"
+    purpose: "generate release/debt evidence"
+  - id: governance_check
+    command: "XLIB_CONTEXT=local_write GOWORK=off make governance-check"
+    purpose: "Goal v2.9.3 P0 main/worktree/evidence/boundary/security/CLI/registry/Makefile baseline"
+  - id: p1_governance_check
+    command: "GOWORK=off make p1-governance-check"
+    purpose: "Goal v2.9.3 P1 local dry-run governance contracts"
+  - id: p2_runtime_check
+    command: "GOWORK=off make p2-runtime-check"
+    purpose: "Goal v2.9.3 P2 runtime/downstream/execution-context dry-run contracts"
+  - id: boundary
+    command: "GOWORK=off make boundary"
+    purpose: "module boundary, x.go import ban, business-layer ban"
+  - id: security
+    command: "GOWORK=off make security"
+    purpose: "govulncheck and secret scan; no /home/k8s/secrets/env/* contents"
+  - id: contracts
+    command: "GOWORK=off make contracts"
+    purpose: "contracts schema and metrics contract validation"
+  - id: main_guard
+    command: "GOWORK=off make main-guard"
+    purpose: "blocks local write work on protected main/master branches"
+  - id: worktree_guard
+    command: "GOWORK=off make worktree-guard"
+    purpose: "requires local write work to run from a worker worktree"
+  - id: evidence_check
+    command: "GOWORK=off make evidence-check"
+    purpose: "validates DONE-with-evidence and artifact policy"
+  - id: cli_contract
+    command: "GOWORK=off make cli-contract"
+    purpose: "validates goalcli CLI contract and report schema"
+  - id: issue_registry
+    command: "GOWORK=off make issue-registry"
+    purpose: "validates issue registry for P0/P1/P2 traceability"
+  - id: command_registry
+    command: "GOWORK=off make command-registry"
+    purpose: "validates command registry for goalcli gates"
+  - id: makefile_baseline
+    command: "GOWORK=off make makefile-baseline"
+    purpose: "validates required Makefile target matrix"
+  - id: governance_chain
+    command: "GOWORK=off make governance-check"
+    purpose: "runs the P0 governance chain"
+  - id: p1_governance_chain
+    command: "GOWORK=off make p1-governance-check"
+    purpose: "runs P1 governance hardening gates"
+  - id: p2_runtime_chain
+    command: "GOWORK=off make p2-runtime-check"
+    purpose: "runs P2 runtime/conformance/execution-context dry-run gates with explicit downstream gaps"
+  - id: integration
+    command: "make integration"
+    purpose: "generator 和 downstream smoke"
+  - id: score_check
+    command: "go run ./cmd/goalcli score --min 9.8"
+    purpose: "Release Score 达到 9.8 基准"
+  - id: evidence
+    command: "CHECK_STATUS=passed GOWORK=off make evidence"
+    purpose: "generate release manifest"
+  - id: version
+    command: "GOWORK=off make version"
+    purpose: "goalcli version contract"
+  - id: doctor
+    command: "GOWORK=off make doctor"
+    purpose: "runtime preflight checks"
+  - id: governance_release_scope
+    command: "GOWORK=off make governance-check"
+    purpose: "P0 worktree, evidence, boundary, security, contracts, docs, CLI, and registry gates"
+  - id: p1_governance_release_scope
+    command: "GOWORK=off make p1-governance-check"
+    purpose: "P1 governance dry-run/verify commands"
+  - id: p2_runtime_release_scope
+    command: "GOWORK=off make p2-runtime-check"
+    purpose: "P2 runtime, packaging, replay, downstream, and execution-context dry-run/verify commands"
+  - id: release_evidence_check
+    command: "RELEASE_EVIDENCE_REQUIRE_PASSED=1 GOWORK=off make release-evidence-check"
+    purpose: "validate release manifest and checksum"
+extended_gates:
+  - id: property
+    command: "GOWORK=off make property"
+  - id: golden
+    command: "GOWORK=off make golden"
+  - id: fuzz_smoke
+    command: "GOWORK=off make fuzz-smoke"
+  - id: ci_extended
+    command: "GOWORK=off make ci-extended"
+  - id: release_check_extended
+    command: "GOWORK=off make release-check-extended"
+  - id: goalcli_g12_acceptance
+    command: "GOAL_ID=GOAL-20260603-XLIB-GOALCLI-001 GOWORK=off make goal-acceptance"
+  - id: goalcli_g13_delivery
+    command: "GOAL_ID=GOAL-20260603-XLIB-GOALCLI-001 GOWORK=off make goal-delivery"
+  - id: goalcli_g14_handover
+    command: "GOAL_ID=GOAL-20260603-XLIB-GOALCLI-001 GOWORK=off make goal-handover"
+  - id: goalcli_g15a_downstream_adoption
+    command: "GOAL_ID=GOAL-20260603-XLIB-GOALCLI-001 GOWORK=off make goal-downstream-adoption"
+  - id: goalcli_g15b_certify
+    command: "GOAL_ID=GOAL-20260603-XLIB-GOALCLI-001 GOWORK=off make goal-certify"
+final_gates:
+  - id: release_score_final
+    command: "go run ./cmd/goalcli score --min 9.8"
+  - id: release_final_check
+    command: "XLIB_CONTEXT=release_verify GOWORK=off make release-final-check"
+  - id: release_preflight
+    command: "XLIB_CONTEXT=release_verify GOWORK=off make release-preflight VERSION=v0.4.6"
+  - id: score
+    command: "goalcli score --min 9.8"
+  - id: kernel_downstream
+    command: "GOWORK=off make integration DOWNSTREAM=kernel"
+  - id: goalcli_g16_runtime_final
+    command: "GOAL_ID=GOAL-20260603-XLIB-GOALCLI-001 GOWORK=off make goal-runtime-final"
+evidence:
+  manifest: "release/manifest/latest.json"
+  checksum: "release/manifest/latest.json.sha256"
+  debt_manifest: "release/debt/latest.json"
+  debt_markdown: "release/debt/latest.md"
+  debt_checksum: "release/debt/latest.json.sha256"
+  goalcli_ledger: ".agent/evidence/ledger.jsonl"
+  goalcli_generated_pack: "release/evidence/goalcli/"
+  done_format: "DONE with evidence:"
+  required_fields:
+    - commit
+    - tree_sha
+    - workflow_run_id
+    - artifact_url
+    - sha256
+    - gates
+forbidden:
+  - "x.go dependency in base libraries"
+  - "production secrets in source, docs, CI, manifest, Issue, PR, or test logs"
+  - "/home/k8s/secrets/env/* contents in any repository artifact"
+  - "hidden global clients"
+  - "business-domain models in xlib-standard, kernel, or generated base libraries"
+  - "legacy baselib-template/foundationx as primary identity outside migration context"
+
+goalcli_v0_1_0:
+  mva_status: complete
+  control_plane: Harness Runtime
+  executor: goalcli
+  source_evidence_ledger: .agent/evidence/ledger.jsonl
+  generated_evidence_pack: release/evidence/goalcli/
+  blocking_activation: PR-6/PR-8 evidence reconciled
+  notes:
+    - "goalcli v0.1.0 不引入第二套并列执行面。"
+    - "G12-G16 是 command-backed 的 goalcli MVA-blocking checks，source evidence 位于 .agent/evidence/ledger.jsonl。"
+    - "release/evidence/goalcli/ 是 generated evidence output，不是 source ledger。"
+  gates_ref: goalcli_mva_gates
+goalcli_mva_gates:
+  - id: G12_ACCEPTANCE
+    command: "GOWORK=off make goal-acceptance"
+    blocking: true
+  - id: G13_DELIVERY
+    command: "GOWORK=off make goal-delivery"
+    blocking: true
+  - id: G14_HANDOVER
+    command: "GOWORK=off make goal-handover"
+    blocking: true
+  - id: G15_DOWNSTREAM_ADOPTION
+    command: "GOWORK=off make goal-downstream-adoption"
+    blocking: true
+  - id: G16_CERTIFY
+    command: "GOWORK=off make goal-certify"
+    blocking: true
+  - id: G12_G16_FINAL
+    command: "GOWORK=off make goal-runtime-final"
+    blocking: true

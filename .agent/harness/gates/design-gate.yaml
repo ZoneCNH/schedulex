@@ -1,0 +1,14 @@
+gate_id: GATE-DESIGN
+name: Design Gate
+type: semantic
+severity: P1
+target: design
+rules:
+  - 设计必须降低执行歧义 (RULE-DESIGN-001)
+  - 关键设计必须写 ADR (RULE-DESIGN-002)
+  - Design 不能替代 Task (RULE-DESIGN-003)
+commands:
+  - make design-check
+pass_condition: 设计覆盖所有必要维度，关键变更有 ADR
+fail_condition: 设计缺少关键维度或缺少必要 ADR
+evidence_required: reports/design-check.json

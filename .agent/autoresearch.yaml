@@ -1,0 +1,3 @@
+schema_version: "1.0"
+mode: opt-in
+network_default: disabled

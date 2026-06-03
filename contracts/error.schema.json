@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Base Library Error",
+  "type": "object",
+  "required": ["kind", "op", "message", "retryable"],
+  "properties": {
+    "kind": {
+      "enum": [
+        "config",
+        "validation",
+        "connection",
+        "unavailable",
+        "timeout",
+        "auth",
+        "conflict",
+        "rate_limit",
+        "internal"
+      ]
+    },
+    "op": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "retryable": {
+      "type": "boolean"
+    }
+  }
+}

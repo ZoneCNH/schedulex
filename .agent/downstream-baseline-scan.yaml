@@ -1,0 +1,4 @@
+schema_version: "2.9.3"
+repo: kernel/configx
+mode: patch-only
+status: gap_explicit_when_repo_missing

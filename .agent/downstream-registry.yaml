@@ -1,0 +1,11 @@
+schema_version: "2.9.3"
+downstreams:
+  - repo: kernel/configx
+    mode: patch-only
+    status: unavailable_in_worker_workspace_gap_explicit
+  - repo: kernel/redisx
+    mode: patch-only
+    status: unavailable_in_worker_workspace_gap_explicit
+  - repo: corekit
+    mode: patch-only
+    status: unavailable_in_worker_workspace_gap_explicit

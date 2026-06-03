@@ -1,0 +1,15 @@
+schema_version: "1.0"
+runtime: debt-governance-runtime-v3.6
+commands:
+  - debt
+  - architecture
+  - domain
+  - docs-drift
+  - dependency-debt
+  - security-debt
+  - testing-debt
+  - implementation-debt
+downstream_targets:
+  - kernel
+  - configx
+  - redisx

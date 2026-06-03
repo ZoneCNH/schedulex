@@ -1,0 +1,6 @@
+schema_version: "2.9.3"
+artifacts:
+  manifest: release/manifest/latest.json
+  checksum: release/manifest/latest.json.sha256
+requirements: [sha256, redaction, workflow_run_id, artifact_url]
+redaction: "production secrets and local absolute secret paths must not be emitted"

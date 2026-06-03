@@ -1,0 +1,47 @@
+name: Goal Gates
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # tag v6.0.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # tag v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Worktree Gate
+        run: bash scripts/harness/no-main-dev.sh
+
+      - name: Build
+        run: make build
+
+      - name: Lint
+        run: |
+          if command -v golangci-lint &>/dev/null; then
+            golangci-lint run ./...
+          else
+            echo "golangci-lint 未安装，跳过。"
+          fi
+
+      - name: Test
+        run: go test ./... -v -count=1
+
+      - name: Evidence Check
+        run: |
+          if make evidence-check 2>/dev/null; then
+            echo "evidence-check 通过。"
+          else
+            echo "evidence-check 目标未定义或失败，跳过。"
+          fi

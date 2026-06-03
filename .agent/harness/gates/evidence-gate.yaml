@@ -1,0 +1,14 @@
+gate_id: GATE-EVIDENCE
+name: Evidence Gate
+type: executable
+severity: P0
+target: evidence
+rules:
+  - Evidence 是完成证明 (RULE-EVIDENCE-001)
+  - Evidence 必须可复查 (RULE-EVIDENCE-002)
+  - Evidence 必须进入 Traceability Matrix (RULE-EVIDENCE-003)
+commands:
+  - make evidence-check
+pass_condition: 所有 Task 有对应 Evidence，Evidence 包含命令/输出/artifact
+fail_condition: 发现无 Evidence 的 Task 或 Evidence 缺少必要字段
+evidence_required: reports/evidence-check.json

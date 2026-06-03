@@ -1,0 +1,6 @@
+schema_version: "1.0"
+artifacts:
+  - path: release/manifest/latest.json
+    source_control: generated-only
+  - path: release/manifest/latest.json.sha256
+    source_control: generated-only

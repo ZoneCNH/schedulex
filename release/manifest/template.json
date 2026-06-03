@@ -1,0 +1,139 @@
+{
+  "module": "{{MODULE_PATH}}",
+  "version": "v0.4.6",
+  "commit": "{{COMMIT}}",
+  "tree_sha": "{{TREE_SHA}}",
+  "source_digest": "{{SOURCE_DIGEST}}",
+  "tracked_file_count": 0,
+  "go_version": "{{GO_VERSION}}",
+  "generated_at": "{{GENERATED_AT}}",
+  "generated_by": "scripts/generate_manifest.sh",
+  "tree_state": "{{TREE_STATE}}",
+  "checks": {
+    "fmt": "{{CHECK_STATUS}}",
+    "vet": "{{CHECK_STATUS}}",
+    "lint": "{{CHECK_STATUS}}",
+    "unit_test": "{{CHECK_STATUS}}",
+    "race_test": "{{CHECK_STATUS}}",
+    "boundary": "{{CHECK_STATUS}}",
+    "secret_scan": "{{CHECK_STATUS}}",
+    "security": "{{CHECK_STATUS}}",
+    "contract": "{{CHECK_STATUS}}",
+    "integration": "{{CHECK_STATUS}}",
+    "dependency_check": "{{CHECK_STATUS}}",
+    "standard_impact": "{{CHECK_STATUS}}",
+    "docs_check": "{{CHECK_STATUS}}",
+    "property": "{{CHECK_STATUS}}",
+    "golden": "{{CHECK_STATUS}}",
+    "fuzz_smoke": "{{CHECK_STATUS}}"
+  },
+  "workflow": {
+    "workflow_run_id": "{{WORKFLOW_RUN_ID}}",
+    "artifact_name": "release-manifest-{{WORKFLOW_RUN_ID}}",
+    "artifact_url": "{{ARTIFACT_URL}}"
+  },
+  "score": {
+    "value": 9.8,
+    "threshold": 9.8,
+    "status": "{{SCORE_STATUS}}",
+    "dimensions": [
+      {
+        "name": "release_evidence",
+        "weight": 1,
+        "passed": true,
+        "detail": "manifest, checksum, workflow and score evidence are present"
+      }
+    ]
+  },
+  "contracts": [
+    {
+      "path": "contracts/config.schema.json",
+      "sha256": "{{CONFIG_SCHEMA_SHA256}}"
+    },
+    {
+      "path": "contracts/error.schema.json",
+      "sha256": "{{ERROR_SCHEMA_SHA256}}"
+    },
+    {
+      "path": "contracts/health.schema.json",
+      "sha256": "{{HEALTH_SCHEMA_SHA256}}"
+    },
+    {
+      "path": "contracts/metrics.md",
+      "sha256": "{{METRICS_SHA256}}"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "{{MODULE_PATH}}",
+      "main": true
+    }
+  ],
+  "standard_impact": {
+    "report_path": "release/standard-impact/latest.md",
+    "report_sha256": "{{STANDARD_IMPACT_SHA256}}",
+    "status": "{{STANDARD_IMPACT_STATUS}}",
+    "downstream_sync_required": false,
+    "context_runtime_change": false,
+    "governance_registry_change": false,
+    "downstream_release_decision": "{{DOWNSTREAM_RELEASE_DECISION}}",
+    "repository_rules_release_decision": "{{REPOSITORY_RULES_RELEASE_DECISION}}",
+    "primary_downstream": "{{PRIMARY_DOWNSTREAM}}"
+  },
+  "governance_runtime": {
+    "runtime": "context-runtime-v4.0",
+    "schema_version": "v2.9.3",
+    "runtime_version": "v2.9.3",
+    "status": "present",
+    "profiles": [
+      "context-lite",
+      "context-standard",
+      "context-full",
+      "context-release"
+    ],
+    "profile_check": "context-profile-check",
+    "release_target": "context-release",
+    "legacy_aliases": [
+      "context-fast-check",
+      "context-standard-check",
+      "context-full-check"
+    ],
+    "gate_statuses": {
+      "governance": "passed"
+    },
+    "profile_statuses": {
+      "p1_governance": "passed",
+      "p2_runtime": "passed"
+    }
+  },
+  "downstream_sync_required": false,
+  "generator_evidence": {
+    "command": "GOWORK=off make integration",
+    "required": true,
+    "targets": [
+      {
+        "name": "kernel",
+        "module_path": "github.com/ZoneCNH/kernel",
+        "package_name": "kernel"
+      },
+      {
+        "name": "corekit",
+        "module_path": "example.com/acme/corekit",
+        "package_name": "corekit"
+      }
+    ]
+  },
+  "tools": {
+    "go": "{{GO_VERSION}}",
+    "golangci-lint": "{{GOLANGCI_LINT_VERSION}}",
+    "govulncheck": "{{GOVULNCHECK_VERSION}}"
+  },
+  "artifacts": [
+    "release/manifest/latest.json",
+    "release/manifest/latest.json.sha256"
+  ],
+  "notes": {
+    "breaking_changes": "none",
+    "known_risks": []
+  }
+}

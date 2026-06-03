@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ZoneCNH/xlib-standard/contracts/execution-context.schema.json",
+  "type": "object",
+  "required": ["context", "root", "gowork"],
+  "properties": {
+    "context": {"type": "string", "enum": ["local_write", "local_readonly", "ci_pull_request", "ci_main_verify", "release_verify"]},
+    "root": {"type": "string"},
+    "gowork": {"type": "string"}
+  }
+}

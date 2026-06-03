@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ZoneCNH/xlib-standard/contracts/conformance-attestation.schema.json",
+  "type": "object",
+  "required": ["profile", "status", "evidence"],
+  "properties": {
+    "profile": {"type": "string"},
+    "status": {"type": "string", "enum": ["passed", "failed", "planned"]},
+    "evidence": {"type": "array"}
+  }
+}

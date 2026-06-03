@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "xlib-standard agent policy",
+  "type": "object",
+  "required": ["policy_id", "scope", "forbidden"],
+  "properties": {
+    "policy_id": {"type": "string"},
+    "scope": {"type": "string"},
+    "forbidden": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

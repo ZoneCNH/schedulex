@@ -1,0 +1,7 @@
+schema: xlib-standard.github-governance.v1
+status: planned
+checks:
+  - branch_protection
+  - required_status_checks
+  - pull_request_reviews
+invariant: 不读取真实 secrets；仅校验本地治理契约。

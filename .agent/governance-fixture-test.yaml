@@ -1,0 +1,7 @@
+schema: xlib-standard.governance-fixture-test.v1
+status: planned
+fixtures:
+  - goalcli-report
+  - command-registry
+  - makefile-baseline
+invariant: 使用本地 fixture 验证治理 gate 映射，不连接外部系统。

@@ -1,0 +1,2 @@
+schema_version: "2.9.3"
+inputs: [release/manifest/latest.json, release/manifest/latest.json.sha256]

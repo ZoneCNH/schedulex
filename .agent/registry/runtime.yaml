@@ -1,0 +1,12 @@
+schema_version: "0.1.0"
+runtime: goalcli
+mva_status: complete
+control_plane: Harness Runtime
+executor: goalcli
+source_evidence_ledger: .agent/evidence/ledger.jsonl
+generated_evidence_pack: release/evidence/goalcli/
+blocking_activation: PR-6/PR-8 evidence reconciled
+notes:
+  - "goalcli v0.1.0 使用 cmd/goalcli 作为唯一执行面。"
+  - "G12-G16 是 command-backed 的 goalcli MVA-blocking checks。"
+  - "release/evidence/goalcli/ 由 ledger evidence 生成，不是 source ledger。"

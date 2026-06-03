@@ -1,0 +1,26 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - copyloopvar
+    - durationcheck
+    - errorlint
+    - govet
+    - ineffassign
+    - makezero
+    - nilerr
+    - nilnesserr
+    - nilnil
+    - nolintlint
+    - predeclared
+    - staticcheck
+    - unconvert
+    - usetesting
+    - wastedassign
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

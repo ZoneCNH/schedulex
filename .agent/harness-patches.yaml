@@ -1,0 +1,6 @@
+schema: harness-patches
+status: reconciled_stub
+source_doc: .agent/harness-patches.md
+entries: []
+notes:
+  - "门禁补丁入口已存在；每项补丁必须说明失败模式、fixture 与通过条件。"

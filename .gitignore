@@ -1,0 +1,100 @@
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Generated Evidence manifest. Recreate with `make evidence`; never commit latest.json.
+release/manifest/latest.json
+release/manifest/latest.json.sha256
+release/standard-impact/latest.md
+release/debt/latest.json
+release/debt/latest.md
+release/debt/latest.json.sha256
+
+# Generated Context Runtime artifacts. Keep checked-in examples/templates explicit.
+.agent/context/packs/*.md
+!.agent/context/packs/example.md
+!.agent/context/packs/*.example.md
+.agent/context/**/*.pack
+.agent/context/schema-snapshots/*.json
+.agent/context/**/schema-snapshots/*.json
+.agent/context/schema-snapshot*.json
+.agent/context/**/*.schema-snapshot.json
+.agent/context/*.schema.snapshot.json
+*.schema.snapshot.json
+!.agent/context/schema-snapshots/example.json
+!.agent/context/**/schema-snapshots/example.json
+!.agent/context/**/*.example
+!.agent/context/**/*.example.*
+!examples/context-packs/
+!examples/context-packs/**
+!examples/schema-snapshots/
+!examples/schema-snapshots/**
+
+# Observed repository rules exports and local Terraform state.
+github-rules-observed.json
+.github/github-rules-observed.json
+.agent/github/rules/observed/
+.github/observed-rules/
+.github/rules/observed/
+.github/rules-observed/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+!*.tfvars.example.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local Agent/OMX runtime state
+.omc/
+.omx/
+.worktree/
+.claude/settings.local.json
+
+# env file
+.env
+.local.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+release/debt/latest.json
+release/debt/latest.md
+release/debt/latest.json.sha256
+/goalcli

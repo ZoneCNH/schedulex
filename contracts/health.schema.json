@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Health Status",
+  "type": "object",
+  "required": ["name", "status", "checked_at"],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "status": {
+      "enum": ["healthy", "degraded", "unhealthy"]
+    },
+    "message": {
+      "type": "string"
+    },
+    "checked_at": {
+      "type": "string"
+    },
+    "latency_ms": {
+      "type": "integer"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+schema: prompt-patches
+status: reconciled_stub
+source_doc: .agent/prompt-patches.md
+entries: []
+notes:
+  - "提示词补丁入口已存在；未评审前不视为生效。"

@@ -1,0 +1,38 @@
+schema_version: debt-rule-registry/v1
+rules:
+  - id: debt.architecture.legacy-import
+    section: architecture
+    severity: P0
+    release_blocking: true
+  - id: debt.domain.marker
+    section: domain
+    severity: P1
+    release_blocking: true
+  - id: debt.docs.marker
+    section: docs
+    severity: P1
+    release_blocking: false
+  - id: debt.dependency.unpinned-latest
+    section: dependency
+    severity: P1
+    release_blocking: false
+  - id: debt.dependency.curl-pipe-bash
+    section: dependency
+    severity: P1
+    release_blocking: false
+  - id: debt.testing.marker
+    section: testing
+    severity: P1
+    release_blocking: false
+  - id: debt.implementation.marker
+    section: implementation
+    severity: P1
+    release_blocking: false
+  - id: debt.security.private-key
+    section: security
+    severity: P0
+    release_blocking: true
+  - id: debt.security.marker
+    section: security
+    severity: P1
+    release_blocking: true

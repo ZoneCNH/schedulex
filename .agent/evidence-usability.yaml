@@ -1,0 +1,66 @@
+schema_version: "1.0"
+module: xlib-standard
+truth_state: .agent/truth-state.yaml
+purpose: "区分 artifact exists、checksum verified、replayable 与 release usable。"
+
+release_artifacts:
+  manifest:
+    path: release/manifest/latest.json
+    checksum: release/manifest/latest.json.sha256
+    generated_in_mva: false
+    artifact_exists_claimed: false
+    checksum_verified: false
+    usable: false
+    release_manifest_changed: false
+  template:
+    path: release/manifest/template.json
+    changed_in_mva: false
+
+usability_requirements:
+  - artifact_url
+  - workflow_run_id
+  - sha256
+  - gates
+  - replayable
+  - redacted
+  - clean_tree
+  - release_context
+  - checksum_verified
+  - consumer_contract_verified
+
+local_evidence:
+  done_format: "DONE with evidence:"
+  acceptance_command: "GOWORK=off make governance-check"
+  local_completion_is_release_artifact: false
+  local_governance_pass_is_release_usable: false
+  release_manifest_generated: false
+
+state_rules:
+  artifact_exists:
+    usable: false
+    reason: "存在文件或上传记录不能证明下游 release 流程可消费。"
+  checksum_verified:
+    usable: false
+    reason: "checksum 只证明完整性，不证明 replayable 或 consumer contract。"
+  replayable:
+    usable: conditional
+    reason: "replay 结果必须绑定 gate、context 和 artifact hash。"
+  usable:
+    requires:
+      - artifact_url
+      - workflow_run_id
+      - sha256
+      - gates
+      - release_context
+      - consumer_contract_verified
+
+forbidden_upgrades:
+  - "artifact_exists != usable"
+  - "checksum_verified != usable"
+  - "CHECK_STATUS=passed != release-ready evidence"
+  - "DONE with evidence != release manifest"
+
+mva_assertions:
+  no_release_manifest_cutover: true
+  no_artifact_upload_claim: true
+  no_release_usability_claim: true

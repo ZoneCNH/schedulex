@@ -1,0 +1,16 @@
+gate_id: GATE-RELEASE
+name: Release Gate
+type: executable
+severity: P0
+target: release
+rules:
+  - Release 必须有 Manifest (RULE-RELEASE-001)
+  - Release 前必须全部验证 (RULE-RELEASE-002)
+  - Release 必须可回滚 (RULE-RELEASE-003)
+commands:
+  - make release-check
+  - make evidence-check
+  - make ci
+pass_condition: Manifest 完整，所有 gate 通过，回滚方案已记录
+fail_condition: Manifest 缺失或 gate 未通过
+evidence_required: reports/release-check.json + release/manifest/latest.json

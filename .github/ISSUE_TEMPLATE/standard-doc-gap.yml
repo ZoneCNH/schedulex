@@ -1,0 +1,47 @@
+name: Standard doc gap
+description: 记录基础库标准文档缺口
+title: "[standard] "
+labels:
+  - documentation
+  - standard
+body:
+  - type: textarea
+    id: gap
+    attributes:
+      label: 缺口
+      description: 说明哪个标准文档缺失、不一致或不可执行。
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 标准区域
+      options:
+        - xlib-standard
+        - repository-roles
+        - layering
+        - module-boundary
+        - dod
+        - harness-gates
+        - evidence-protocol
+        - release-standard
+        - security-and-secret-policy
+        - template-generation-contract
+        - downstream-compatibility
+        - retrospective-and-patches
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: 粘贴命令、文件路径或评审发现。不要粘贴真实凭据。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+      description: 说明标准应如何更新或收紧。
+    validations:
+      required: true

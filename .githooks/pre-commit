@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# RULE-WORKTREE-001: 禁止在 main/master 上 commit
+BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+  echo "pre-commit: 禁止在 $BRANCH 分支上直接 commit。"
+  echo "请使用 git worktree 创建独立开发分支。"
+  exit 1
+fi
+
+# RULE-SECRET-001: 提前一步拦截 secret
+if [ -x scripts/check_secrets.sh ]; then
+  echo "pre-commit: 执行 secret 扫描..."
+  scripts/check_secrets.sh
+fi

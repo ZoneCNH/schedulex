@@ -1,0 +1,4 @@
+schema_version: "2.9.3"
+profiles:
+  standard-source: [governance-check, p1-governance-check, p2-runtime-check]
+  l0-kernel: [main-guard, worktree-guard, cli-contract]

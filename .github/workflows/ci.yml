@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # tag v6.0.2
+
+      - name: Setup Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # tag v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.3.0
+
+      - name: Release Check
+        run: |
+          export WORKFLOW_RUN_ID="${{ github.run_id }}"
+          export ARTIFACT_NAME="release-manifest-${{ github.run_id }}"
+          export ARTIFACT_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          GOWORK=off XLIB_CONTEXT=ci_pull_request make release-check
+
+      - name: Hash release evidence
+        if: always()
+        id: release-evidence
+        run: |
+          digest="$(./scripts/hash_release_evidence.sh)"
+          echo "latest_json_sha256=${digest}" >> "$GITHUB_OUTPUT"
+          debt_digest=""
+          if [ -f release/debt/latest.json ]; then
+            debt_digest="$(./scripts/hash_release_evidence.sh release/debt/latest.json release/debt/latest.json.sha256)"
+            echo "debt_json_sha256=${debt_digest}" >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "## Release evidence"
+            echo "- Artifact: \`release-manifest-${{ github.run_id }}\`"
+            echo "- Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "- Manifest: \`release/manifest/latest.json\`"
+            echo "- SHA256: \`${digest}\`"
+            if [ -n "$debt_digest" ]; then
+              echo "- Debt evidence: \`release/debt/latest.json\`"
+              echo "- Debt SHA256: \`${debt_digest}\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # tag v7.0.1
+        with:
+          name: release-manifest-${{ github.run_id }}
+          path: |
+            release/manifest/latest.json
+            release/manifest/latest.json.sha256
+            release/debt/latest.json
+            release/debt/latest.md
+            release/debt/latest.json.sha256
+          if-no-files-found: warn

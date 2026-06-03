@@ -1,0 +1,7 @@
+schema_version: "1.0"
+write_contexts:
+  local_write: "linked worktree only"
+  ci_pull_request: "read/verify"
+forbidden:
+  - "main local write"
+  - "release/manifest/latest.json as source SSOT"

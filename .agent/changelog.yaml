@@ -1,0 +1,8 @@
+schema: xlib-standard.changelog.v1
+status: planned
+required_sections:
+  - Added
+  - Changed
+  - Fixed
+  - Security
+invariant: 发布说明必须引用 release manifest 和 Evidence。

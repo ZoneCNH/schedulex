@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "goalcli command registry",
+  "type": "object",
+  "required": ["schema_version", "module", "commands"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "module": {"type": "string"},
+    "commands": {"type": "array"}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ZoneCNH/xlib-standard/contracts/execution-evidence.schema.json",
+  "title": "Execution Evidence",
+  "description": "Per-command execution evidence for Goal Runtime tasks. Captures what command ran, where, on which commit, and the SHA-256 of its stdout, enabling tamper-evident reconstruction. Distinct from release-level evidence (release/manifest/latest.json), which aggregates multiple execution evidences.",
+  "type": "object",
+  "required": [
+    "evidence_id",
+    "command",
+    "cwd",
+    "branch",
+    "commit",
+    "exit_code",
+    "timestamp",
+    "stdout_sha256",
+    "artifact_path"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string",
+      "description": "Stable identifier, e.g. EVID-<TASK-ID>-<seq>.",
+      "pattern": "^EVID-[A-Za-z0-9._-]+$"
+    },
+    "command": {
+      "type": "string",
+      "description": "Verbatim shell command that was executed, including flags."
+    },
+    "cwd": {
+      "type": "string",
+      "description": "Absolute working directory at execution time. May be redacted to a relative repo-root path for portability."
+    },
+    "branch": {
+      "type": "string",
+      "description": "Git branch name (or detached HEAD marker) at execution time."
+    },
+    "commit": {
+      "type": "string",
+      "description": "Full 40-character lowercase git commit SHA at execution time.",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "exit_code": {
+      "type": "integer",
+      "description": "Process exit code. 0 indicates success; non-zero indicates failure. Failure evidences are still valid and feed Retrospective.",
+      "minimum": 0
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "RFC 3339 timestamp at command completion, with timezone offset.",
+      "format": "date-time"
+    },
+    "stdout_sha256": {
+      "type": "string",
+      "description": "Lowercase hex SHA-256 of the captured stdout. The raw stdout is stored under artifact_path.",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "stderr_sha256": {
+      "type": "string",
+      "description": "Lowercase hex SHA-256 of the captured stderr, when stderr is preserved.",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifact_path": {
+      "type": "string",
+      "description": "Repository-relative path to the persisted artifact (typically under reports/ or release/evidence/)."
+    },
+    "reconstructed": {
+      "type": "boolean",
+      "description": "True when the evidence was rebuilt after loss (RULE-EVID-LOSS-002). Release-blocking evidence must not be reconstructed at low confidence.",
+      "default": false
+    },
+    "confidence": {
+      "description": "Confidence level when reconstructed=true. Release evidence requires high.",
+      "enum": ["high", "medium", "low"]
+    },
+    "tags": {
+      "type": "array",
+      "description": "Optional labels such as gate name, task ID, or release ID.",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

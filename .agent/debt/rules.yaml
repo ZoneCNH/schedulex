@@ -1,0 +1,25 @@
+schema_version: debt-rules/v1
+active_profile: xlib-standard-debt-v1
+minimum_score: 9.8
+sections:
+  architecture:
+    p0:
+      - forbid legacy github.com/ZoneCNH/x.go and github.com/ZoneCNH/x imports in production code
+  domain:
+    p0:
+      - preserve standard-domain boundaries and forbid explicit xlib-domain-forbidden markers
+  docs:
+    p1:
+      - flag explicit xlib-docs-drift markers before release
+  dependency:
+    p0:
+      - dependencies must have declared purpose and avoid unreviewed installer patterns
+  testing:
+    p1:
+      - flag explicit xlib-testing-debt markers
+  implementation:
+    p2:
+      - observe explicit xlib-implementation-debt markers
+  security:
+    p0:
+      - forbid private-key material and release-blocking security debt markers

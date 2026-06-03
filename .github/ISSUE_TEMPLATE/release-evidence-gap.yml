@@ -1,0 +1,36 @@
+name: Release evidence gap
+description: 记录 release Evidence、manifest 或 final gate 缺口
+title: "[evidence] "
+labels:
+  - release
+  - evidence
+body:
+  - type: textarea
+    id: gate
+    attributes:
+      label: 失败或缺失的 gate
+      description: 记录命令和关键输出。
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: manifest
+    attributes:
+      label: Manifest 状态
+      description: 说明 `release/manifest/latest.json` 是否生成、是否可校验、是否为 artifact。
+    validations:
+      required: true
+  - type: textarea
+    id: workspace
+    attributes:
+      label: 工作区状态
+      description: 说明是否 clean；不要粘贴 secret。
+    validations:
+      required: true
+  - type: textarea
+    id: next
+    attributes:
+      label: 下一步
+      description: 说明修复或补充 Evidence 的最小动作。
+    validations:
+      required: true

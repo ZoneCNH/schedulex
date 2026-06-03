@@ -1,0 +1,3 @@
+schema_version: "1.0"
+canonical_module: "github.com/ZoneCNH/xlib-standard"
+legacy_names: ["baselib-template", "foundationx"]

@@ -1,0 +1,2 @@
+schema_version: "2.9.3"
+policies: [main_guard, worktree_guard, evidence_redaction, patch_only_downstream]

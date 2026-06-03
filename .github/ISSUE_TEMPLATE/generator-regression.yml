@@ -1,0 +1,35 @@
+name: Generator regression
+description: 记录模板生成或 downstream compatibility 回归
+title: "[generator] "
+labels:
+  - generator
+  - regression
+body:
+  - type: textarea
+    id: command
+    attributes:
+      label: 触发命令
+      description: 记录 `scripts/render_template.sh` 或 `make integration` 命令。
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: 失败现象
+      description: 说明占位符残留、路径错误、构建失败或 downstream smoke 失败。
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: 边界影响
+      description: 是否引入 `x.go` 依赖、业务模型、secret 或 release manifest 生成物。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true

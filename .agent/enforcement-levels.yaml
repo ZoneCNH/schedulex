@@ -1,0 +1,5 @@
+schema_version: "2.9.3"
+levels:
+  P0: fail_closed
+  P1: fail_closed_for_self
+  P2: dry_run_or_gap_explicit

@@ -1,0 +1,2 @@
+schema_version: "2.9.3"
+categories: [missing_file, contract_drift, unavailable_downstream, failed_gate]

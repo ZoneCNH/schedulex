@@ -1,0 +1,28 @@
+schema_version: "1.1"
+# 两层 evidence 模型：
+#   release_evidence  -- 单次 release 的聚合产物（release/manifest/latest.json），
+#                        由 internal/tools/releasemanifest 生成，绑定 commit/tree。
+#   execution_evidence -- 单次命令执行的细粒度证据，绑定 stdout SHA-256，
+#                        反作弊（RULE-EVIDENCE-ANTI-FAKE-001/002）。
+#                        Schema: contracts/execution-evidence.schema.json
+release_evidence:
+  required_fields: [commit, tree_sha, workflow_run_id, artifact_url, sha256, gates]
+execution_evidence:
+  schema: contracts/execution-evidence.schema.json
+  required_fields:
+    - evidence_id
+    - command
+    - cwd
+    - branch
+    - commit
+    - exit_code
+    - timestamp
+    - stdout_sha256
+    - artifact_path
+  optional_fields:
+    - stderr_sha256
+    - reconstructed
+    - confidence
+    - tags
+# 顶层 required_fields 保留以保持向后兼容（消费者按 release_evidence 字段解读）。
+required_fields: [commit, tree_sha, workflow_run_id, artifact_url, sha256, gates]

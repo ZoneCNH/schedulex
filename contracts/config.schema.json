@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Base Library Config",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "timeout_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "secret": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

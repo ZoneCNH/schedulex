@@ -1,0 +1,15 @@
+gate_id: GATE-TASK
+name: Task Gate
+type: semantic
+severity: P0
+target: task
+rules:
+  - Task 是最小可执行单元 (RULE-TASK-001)
+  - Task 必须包含完整字段 (RULE-TASK-002)
+  - 禁止超大 Task (RULE-TASK-003)
+  - Task 必须可生成 Issue (RULE-TASK-004)
+commands:
+  - make task-check
+pass_condition: 所有 Task 字段完整，粒度合理，可映射 Issue
+fail_condition: 发现超大 Task 或字段缺失
+evidence_required: reports/task-check.json

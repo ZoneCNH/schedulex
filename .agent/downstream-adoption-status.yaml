@@ -1,0 +1,78 @@
+schema_version: "1.0"
+module: xlib-standard
+source_registry: .agent/downstream-registry.yaml
+truth_state: .agent/truth-state.yaml
+mode: patch-only
+truth_status: registered_not_adopted
+purpose: "区分 downstream registered、baseline scanned、patch planned 与 proof-based adoption。"
+
+field_semantics:
+  "current_registry.repo": "当前 worker workspace 中的登记查询范围；当 status 为 unavailable_in_worker_workspace_gap_explicit 时，允许使用 slash-delimited registry scope，不等于单个已检出的 downstream 仓库。"
+  "mode": "执行或计划模式，例如 patch-only；不得作为 proof-based adoption 证据。"
+  "status": "当前 workspace 可用性或 gap 状态；gap 状态不得升级为通过证据。"
+  "registry_state": "标准源声明的目标登记态；不等于 downstream implemented。"
+  "adoption_status": "采纳结论；只有带当前 downstream 命令输出的 proof-based adoption 才能写入 adopted。"
+  "evidence_state": "证据状态；not_run、registry_gap_only 或 dry-run 不能作为 release gate passed evidence。"
+
+current_registry:
+  - repo: kernel/configx
+    mode: patch-only
+    status: unavailable_in_worker_workspace_gap_explicit
+    adoption_status: not_adopted
+    baseline_scanned: false
+    proof_based_adoption: false
+    evidence_state: registry_gap_only
+
+standard_target_libraries:
+  - name: kernel
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+  - name: configx
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+  - name: observex
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+  - name: testkitx
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+  - name: postgresx
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+  - name: redisx
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+  - name: kafkax
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+  - name: taosx
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+  - name: ossx
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+  - name: clickhousex
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
+
+first_pr_mva_assertions:
+  no_downstream_repo_write: true
+  no_migration_wave_execution: true
+  no_proof_based_adoption: true
+  no_baseline_scan_claim: true
+
+forbidden_upgrades:
+  - "registered != adopted"
+  - "baseline_scanned != adopted"
+  - "patch_only != proof_based_adoption"
+  - "standard_target_declared != downstream implemented"

@@ -1,0 +1,4 @@
+schema_version: "2.9.3"
+locks:
+  docs/goal.md: leader_owned_readonly
+  release/manifest/latest.json: generated_do_not_commit

@@ -1,0 +1,144 @@
+schema_version: "1.0"
+module: xlib-standard
+source_registry: .agent/command-registry.yaml
+truth_state: .agent/truth-state.yaml
+purpose: "区分 command registered、planned、dry-run verify、implemented 与 executed。"
+
+status_values:
+  - registered
+  - planned
+  - dry_run_ready
+  - implemented
+  - executed
+
+groups:
+  - id: p0_implemented_or_scripted
+    phase: P0
+    implementation_status: implemented
+    evidence_state: requires_current_command_output
+    note: "P0 命令已有 Makefile 或 goalcli 入口；是否 passed 必须以本次命令输出为准。"
+    commands:
+      - version
+      - doctor
+      - minimal-kernel
+      - main-guard
+      - worktree-guard
+      - evidence-check
+      - done-assertion
+      - cli-contract
+      - issue-registry
+      - command-registry
+      - makefile-baseline
+      - boundary
+      - contracts
+      - dependency-check
+      - docs-check
+      - debt
+      - architecture
+      - domain
+      - docs-drift
+      - dependency-debt
+      - security-debt
+      - testing-debt
+      - implementation-debt
+      - downstream-debt
+      - debt-evidence
+      - debt-evidence-checksum-check
+      - debt-evidence-hash
+      - evidence
+      - manifest
+      - integration
+      - release-evidence-check
+      - release-evidence-checksum-check
+      - release-evidence-hash
+      - release-final-check
+      - render-check
+      - score
+      - secrets
+      - security
+      - standard-impact-check
+
+  - id: p1_dry_run_contracts
+    phase: P1
+    implementation_status: dry_run_ready
+    evidence_strength: dry_run_contract_only
+    note: "P1 本地治理命令可 dry-run/verify；不得升级为 release usable。"
+    commands:
+      - agent-team-contract
+      - scope-lock
+      - pr-template
+      - acceptance-matrix
+      - runtime-health
+      - goal-runtime
+      - naming
+      - upgrade-standard
+      - conformance-profile
+      - downstream-registry
+      - self-healing-skeleton
+      - policy-schema
+      - github-settings
+      - github-governance
+      - governance-fixture-test
+      - toolchain
+      - evidence-artifacts
+      - supply-chain
+      - autoresearch
+      - changelog
+
+  - id: p2_dry_run_contracts
+    phase: P2
+    implementation_status: dry_run_ready
+    evidence_strength: dry_run_contract_only
+    note: "P2 runtime/conformance/packaging 命令当前只证明 dry-run contract。"
+    commands:
+      - install-runtime
+      - upgrade-runtime
+      - release-ready
+      - evidence-replay
+      - attest-conformance
+      - pack-standard
+      - pack-gate
+      - pack-evidence
+      - runtime-file-ownership
+      - execution-context
+
+  - id: p2_downstream_gap_reports
+    phase: P2
+    implementation_status: dry_run_ready
+    adoption_status: not_adopted
+    evidence_strength: gap_report_only
+    note: "downstream baseline/adoption 当前只能报告 gap，不得声明 proof-based adoption。"
+    commands:
+      - downstream-baseline
+      - downstream-adoption
+
+  - id: goalcli_v0_1_0_mva_blocking
+    phase: P2
+    implementation_status: implemented
+    mva_status: complete
+    evidence_strength: full_mva_evidence
+    note: "goalcli v0.1.0 MVA commands 通过 goalcli 和 source ledger 证明 blocking G12-G16 evidence contracts。"
+    commands:
+      - goal-acceptance
+      - goal-delivery
+      - goal-handover
+      - goal-downstream-adoption
+      - goal-certify
+      - goal-runtime-final
+
+forbidden_gate_interpretations:
+  - state: registered
+    rule: "registered command != passed gate"
+  - state: planned
+    rule: "planned command != implemented behavior"
+  - state: dry_run_ready
+    rule: "dry-run verify only proves the dry-run gate"
+  - state: implemented
+    rule: "implemented command still requires current command output before passed"
+  - state: executed
+    rule: "executed requires preserved command, exit code, context, and timestamp"
+
+mva_assertions:
+  debt_command_runtime_added: true
+  release_check_requires_debt_evidence: true
+  release_manifest_includes_debt_evidence: true

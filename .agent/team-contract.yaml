@@ -1,0 +1,3 @@
+schema_version: "2.9.3"
+roles: [leader, executor, verifier, reviewer]
+rule: "workers stay inside assigned scope and report blockers upward"

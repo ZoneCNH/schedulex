@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "xlib-standard issue registry",
+  "type": "object",
+  "required": ["schema_version", "module", "issues"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "module": {"type": "string"},
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "command", "evidence"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(P0|P1|P2|CTX)-[0-9]{3}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": ["implemented"]
+          },
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

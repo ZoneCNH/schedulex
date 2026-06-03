@@ -1,0 +1,6 @@
+schema: rule-patches
+status: reconciled_stub
+source_doc: .agent/rule-patches.md
+entries: []
+notes:
+  - "规则补丁入口已存在；实际补丁必须在评审后追加，并关联 REQ 或 ADR。"

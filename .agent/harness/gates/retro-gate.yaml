@@ -1,0 +1,14 @@
+gate_id: GATE-RETRO
+name: Retrospective Gate
+type: semantic
+severity: P1
+target: retrospective
+rules:
+  - 每个 Goal 必须有 Retrospective (RULE-RETRO-001)
+  - 必须生成 Patch (RULE-RETRO-002)
+  - 重复问题必须升级为规则 (RULE-RETRO-003)
+commands:
+  - make retro-check
+pass_condition: Retrospective 包含回顾/根因/Patch，重复问题已升级为规则
+fail_condition: 缺少 Retrospective 或未生成 Patch
+evidence_required: retrospective document + patch files

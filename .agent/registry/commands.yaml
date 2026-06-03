@@ -1,0 +1,30 @@
+schema_version: "0.1.0"
+runtime: goalcli
+control_plane: Harness Runtime
+executor: goalcli
+mva_status: complete
+commands:
+  - gate: G12_ACCEPTANCE
+    command: goal-acceptance
+    make_target: goal-acceptance
+    blocking: true
+  - gate: G13_DELIVERY
+    command: goal-delivery
+    make_target: goal-delivery
+    blocking: true
+  - gate: G14_HANDOVER
+    command: goal-handover
+    make_target: goal-handover
+    blocking: true
+  - gate: G15_DOWNSTREAM_ADOPTION
+    command: goal-downstream-adoption
+    make_target: goal-downstream-adoption
+    blocking: true
+  - gate: G16_CERTIFY
+    command: goal-certify
+    make_target: goal-certify
+    blocking: true
+  - gate: G12_G16_FINAL
+    command: goal-runtime-final
+    make_target: goal-runtime-final
+    blocking: true

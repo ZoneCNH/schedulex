@@ -1,0 +1,312 @@
+schema_version: "2.9.3"
+module: xlib-standard
+commands:
+  - name: version
+    phase: P0
+    target: version
+  - name: doctor
+    phase: P0
+    target: doctor
+  - name: minimal-kernel
+    phase: P0
+    target: minimal-kernel
+  - name: main-guard
+    phase: P0
+    target: main-guard
+  - name: worktree-guard
+    phase: P0
+    target: worktree-guard
+  - name: worktree-check
+    phase: P0
+    target: worktree-check
+  - name: context-check
+    phase: P0
+    target: context-check
+  - name: spec-check
+    phase: P0
+    target: spec-check
+  - name: design-check
+    phase: P0
+    target: design-check
+  - name: task-check
+    phase: P0
+    target: task-check
+  - name: pr-check
+    phase: P0
+    target: pr-check
+  - name: evidence-check
+    phase: P0
+    target: evidence-check
+  - name: done-assertion
+    phase: P0
+    target: done-assertion
+  - name: cli-contract
+    phase: P0
+    target: cli-contract
+  - name: issue-registry
+    phase: P0
+    target: issue-registry
+  - name: command-registry
+    phase: P0
+    target: command-registry
+  - name: makefile-baseline
+    phase: P0
+    target: makefile-baseline
+  - name: boundary
+    phase: P0
+    target: boundary
+  - name: architecture
+    phase: P0
+    target: architecture
+  - name: domain
+    phase: P0
+    target: domain
+  - name: docs-drift
+    phase: P0
+    target: docs-drift
+  - name: dependency-debt
+    phase: P0
+    target: dependency-debt
+  - name: testing-debt
+    phase: P0
+    target: testing-debt
+  - name: implementation-debt
+    phase: P0
+    target: implementation-debt
+  - name: security-debt
+    phase: P0
+    target: security-debt
+  - name: debt
+    phase: P0
+    target: debt
+  - name: contracts
+    phase: P0
+    target: contracts
+  - name: dependency-check
+    phase: P0
+    target: dependency-check
+  - name: docs-check
+    phase: P0
+    target: docs-check
+  - name: debt
+    phase: P0
+    target: debt
+  - name: architecture
+    phase: P0
+    target: architecture
+  - name: domain
+    phase: P0
+    target: domain
+  - name: docs-drift
+    phase: P0
+    target: docs-drift
+  - name: dependency-debt
+    phase: P0
+    target: dependency-debt
+  - name: security-debt
+    phase: P0
+    target: security-debt
+  - name: testing-debt
+    phase: P0
+    target: testing-debt
+  - name: implementation-debt
+    phase: P0
+    target: implementation-debt
+  - name: downstream-debt
+    phase: P0
+    target: downstream-debt
+  - name: debt-evidence
+    phase: P0
+    target: debt-evidence
+  - name: debt-evidence-checksum-check
+    phase: P0
+    target: debt-evidence-checksum-check
+  - name: debt-evidence-hash
+    phase: P0
+    target: debt-evidence-hash
+  - name: evidence
+    phase: P0
+    target: evidence
+  - name: manifest
+    phase: P0
+    target: manifest
+  - name: integration
+    phase: P0
+    target: integration
+  - name: release-evidence-check
+    phase: P0
+    target: release-evidence-check
+  - name: release-evidence-checksum-check
+    phase: P0
+    target: release-evidence-checksum-check
+  - name: release-evidence-hash
+    phase: P0
+    target: release-evidence-hash
+  - name: release-final-check
+    phase: P0
+    target: release-final-check
+  - name: render-check
+    phase: P0
+    target: render-check
+  - name: rules-consistency-check
+    phase: P0
+    target: rules-consistency-check
+  - name: rules-verify
+    phase: P0
+    target: rules-verify
+  - name: score
+    phase: P0
+    target: score
+  - name: secrets
+    phase: P0
+    target: secrets
+  - name: security
+    phase: P0
+    target: security
+  - name: standard-impact-check
+    phase: P0
+    target: standard-impact-check
+  - name: context-profile
+    phase: CTX
+    target: context-profile
+  - name: context-profile-check
+    phase: CTX
+    target: context-profile-check
+  - name: context-schema-check
+    phase: CTX
+    target: context-schema-check
+  - name: context-lite
+    phase: CTX
+    target: context-lite
+  - name: context-standard
+    phase: CTX
+    target: context-standard
+  - name: context-full
+    phase: CTX
+    target: context-full
+  - name: context-release
+    phase: CTX
+    target: context-release
+  - name: context-fast-check
+    phase: CTX
+    target: context-fast-check
+  - name: context-standard-check
+    phase: CTX
+    target: context-standard-check
+  - name: context-full-check
+    phase: CTX
+    target: context-full-check
+  - name: agent-team-contract
+    phase: P1
+    target: p1-governance-check
+  - name: scope-lock
+    phase: P1
+    target: p1-governance-check
+  - name: pr-template
+    phase: P1
+    target: p1-governance-check
+  - name: acceptance-matrix
+    phase: P1
+    target: p1-governance-check
+  - name: runtime-health
+    phase: P1
+    target: p1-governance-check
+  - name: goal-runtime
+    phase: P1
+    target: p1-governance-check
+  - name: goal-acceptance
+    phase: P2
+    target: goal-acceptance
+  - name: goal-delivery
+    phase: P2
+    target: goal-delivery
+  - name: goal-handover
+    phase: P2
+    target: goal-handover
+  - name: goal-downstream-adoption
+    phase: P2
+    target: goal-downstream-adoption
+  - name: goal-certify
+    phase: P2
+    target: goal-certify
+  - name: goal-runtime-final
+    phase: P2
+    target: goal-runtime-final
+  - name: naming
+    phase: P1
+    target: p1-governance-check
+  - name: upgrade-standard
+    phase: P1
+    target: p1-governance-check
+  - name: conformance-profile
+    phase: P1
+    target: p1-governance-check
+  - name: downstream-registry
+    phase: P1
+    target: p1-governance-check
+  - name: self-healing-skeleton
+    phase: P1
+    target: p1-governance-check
+  - name: policy-schema
+    phase: P1
+    target: p1-governance-check
+  - name: github-settings
+    phase: P1
+    target: p1-governance-check
+  - name: github-governance
+    phase: P1
+    target: p1-governance-check
+  - name: governance-fixture-test
+    phase: P1
+    target: p1-governance-check
+  - name: toolchain
+    phase: P1
+    target: p1-governance-check
+  - name: evidence-artifacts
+    phase: P1
+    target: p1-governance-check
+  - name: supply-chain
+    phase: P1
+    target: p1-governance-check
+  - name: autoresearch
+    phase: P1
+    target: p1-governance-check
+  - name: changelog
+    phase: P1
+    target: p1-governance-check
+  - name: install-runtime
+    phase: P2
+    target: p2-runtime-check
+  - name: upgrade-runtime
+    phase: P2
+    target: p2-runtime-check
+  - name: release-ready
+    phase: P2
+    target: p2-runtime-check
+  - name: evidence-replay
+    phase: P2
+    target: p2-runtime-check
+  - name: attest-conformance
+    phase: P2
+    target: p2-runtime-check
+  - name: pack-standard
+    phase: P2
+    target: p2-runtime-check
+  - name: pack-gate
+    phase: P2
+    target: p2-runtime-check
+  - name: pack-evidence
+    phase: P2
+    target: p2-runtime-check
+  - name: runtime-file-ownership
+    phase: P2
+    target: p2-runtime-check
+  - name: downstream-baseline
+    phase: P2
+    target: downstream-baseline
+  - name: downstream-adoption
+    phase: P2
+    target: downstream-adoption
+  - name: execution-context
+    phase: P2
+    target: p2-runtime-check

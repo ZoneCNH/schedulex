@@ -1,0 +1,2 @@
+schema_version: "2.9.3"
+verify: [branch_protection, required_checks, codeowners_optional]

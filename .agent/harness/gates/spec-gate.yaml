@@ -1,0 +1,15 @@
+gate_id: GATE-SPEC
+name: Spec Gate
+type: semantic
+severity: P0
+target: spec
+rules:
+  - 每个 Requirement 必须有 AC (RULE-SPEC-001)
+  - Requirement 必须分优先级 (RULE-SPEC-002)
+  - AC 必须可验证 (RULE-SPEC-003)
+  - 禁止抽象不可验收需求 (RULE-SPEC-004)
+commands:
+  - make spec-check
+pass_condition: 所有 Requirement 有 AC，AC 有验证方法，无抽象需求
+fail_condition: 发现无 AC 的需求或不可验证的 AC
+evidence_required: reports/spec-check.json

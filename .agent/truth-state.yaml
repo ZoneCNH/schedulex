@@ -1,0 +1,122 @@
+schema_version: "1.0"
+module: xlib-standard
+scope:
+  name: first-pr-mva-truth-state
+  source: /home/xlib-standard/.worktree/patch.md
+  acceptance_command: "GOWORK=off XLIB_CONTEXT=ci_pull_request make governance-check"
+  optional_commands:
+    - "GOWORK=off go test ./cmd/goalcli ./contracts"
+  summary: "first-PR/MVA 只建立治理事实分层，不实现 release runtime 或 downstream migration-wave。"
+  excludes:
+    - release_manifest_cutover
+    - release_check_behavior_change
+    - gate_result_runtime
+    - downstream_migration_wave
+
+strength_order:
+  - planned
+  - manifest_covered
+  - dry_run_verified
+  - shadow_executed
+  - real_executed
+  - evidence_verified
+  - release_usable
+
+observable_states:
+  - registered
+  - baseline_scanned
+  - planned
+  - dry_run_ready
+  - implemented
+  - executed
+  - artifact_exists
+  - checksum_verified
+  - usable
+  - adopted
+  - not_run
+
+state_mapping:
+  registered:
+    strength: planned
+    passed_gate_evidence: false
+    meaning: "规则、命令或 downstream 已登记，但未证明已执行或已采用。"
+  baseline_scanned:
+    strength: planned
+    passed_gate_evidence: false
+    meaning: "已完成 baseline 扫描，不代表实现或采用。"
+  planned:
+    strength: planned
+    passed_gate_evidence: false
+    meaning: "存在计划、入口或 contract，尚未证明真实实现。"
+  dry_run_ready:
+    strength: dry_run_verified
+    passed_gate_evidence: conditional
+    meaning: "可执行 dry-run 或 contract 检查，只能证明 dry-run gate。"
+  implemented:
+    strength: real_executed
+    passed_gate_evidence: conditional
+    meaning: "存在真实实现，必须结合当前命令输出和退出码判断。"
+  executed:
+    strength: real_executed
+    passed_gate_evidence: true
+    meaning: "本次证据中存在命令、退出码和上下文。"
+  artifact_exists:
+    strength: manifest_covered
+    passed_gate_evidence: false
+    meaning: "artifact 文件或上传存在，不代表可消费。"
+  checksum_verified:
+    strength: evidence_verified
+    passed_gate_evidence: conditional
+    meaning: "校验和匹配，只证明完整性，不证明 release usable。"
+  usable:
+    strength: release_usable
+    passed_gate_evidence: true
+    meaning: "artifact 可被目标流程消费，且有 replay 或 contract 证据。"
+  adopted:
+    strength: release_usable
+    passed_gate_evidence: true
+    meaning: "downstream 有 proof-based adoption 证据。"
+  not_run:
+    strength: planned
+    passed_gate_evidence: false
+    meaning: "未运行，不得报告为 passed。"
+
+forbidden_upgrades:
+  - from: planned
+    to: implemented
+    rule: "planned != implemented"
+  - from: manifest_covered
+    to: release_usable
+    rule: "manifest_covered != release_usable"
+  - from: dry_run_verified
+    to: release_usable
+    rule: "dry_run_verified != release_usable"
+  - from: not_run
+    to: passed
+    rule: "not_run != passed"
+  - from: registered
+    to: adopted
+    rule: "registered != adopted"
+  - from: baseline_scanned
+    to: implemented
+    rule: "baseline_scanned != implemented"
+  - from: artifact_exists
+    to: usable
+    rule: "artifact_exists != usable"
+  - from: check_status_passed
+    to: release_ready_evidence
+    rule: "CHECK_STATUS=passed != release-ready evidence"
+
+fact_files:
+  command_implementation_status: .agent/command-implementation-status.yaml
+  release_required_gates: .agent/release-required-gates.yaml
+  evidence_usability: .agent/evidence-usability.yaml
+  downstream_adoption_status: .agent/downstream-adoption-status.yaml
+
+current_mva_assertions:
+  release_manifest_changed: false
+  release_check_behavior_changed: false
+  gate_result_runtime_changed: false
+  downstream_adoption_claimed: false
+  release_manifest_generated: false
+  downstream_migration_wave_changed: false

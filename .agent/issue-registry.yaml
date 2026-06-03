@@ -1,0 +1,299 @@
+schema_version: "2.9.3"
+module: xlib-standard
+goal_id: GOAL-V293-P0
+issues:
+  - id: P0-001
+    title: 最小内核与守卫命令面
+    status: implemented
+    command: minimal-kernel
+    evidence: [version, doctor, main-guard, worktree-guard, cli-contract]
+  - id: P0-002
+    title: 命令、议题与 Makefile 单一注册源
+    status: implemented
+    command: command-registry
+    evidence: [issue-registry, command-registry, makefile-baseline]
+  - id: P0-003
+    title: 证据与 DONE 断言执行
+    status: implemented
+    command: evidence-check
+    evidence: [done-assertion, evidence-artifacts]
+  - id: P0-004
+    title: 主分支写入防护
+    status: implemented
+    command: main-guard
+    evidence: [main-guard, scope-lock]
+  - id: P0-005
+    title: 工作树隔离防护
+    status: implemented
+    command: worktree-guard
+    evidence: [worktree-guard, runtime-file-ownership]
+  - id: P0-006
+    title: CLI 契约和报告模式
+    status: implemented
+    command: cli-contract
+    evidence: [goalcli-report, goalcli-cli-contract]
+  - id: P0-007
+    title: 边界和反向依赖防护
+    status: implemented
+    command: boundary
+    evidence: [boundary, minimal-kernel]
+  - id: P0-008
+    title: 安全与密钥占位防护
+    status: implemented
+    command: security
+    evidence: [security, evidence-artifacts]
+  - id: P0-009
+    title: 契约 JSON Schema 校验
+    status: implemented
+    command: contracts
+    evidence: [contracts, policy-schema]
+  - id: P0-010
+    title: 文档契约一致性检查
+    status: implemented
+    command: docs-check
+    evidence: [docs-check, goalcli-cli-contract]
+  - id: P0-011
+    title: 发布证据哈希链
+    status: implemented
+    command: release-evidence-hash
+    evidence: [release-evidence-hash, release-evidence-check]
+  - id: P0-012
+    title: 发布证据校验和防护
+    status: implemented
+    command: release-evidence-checksum-check
+    evidence: [release-evidence-checksum-check, evidence-replay]
+  - id: P0-013
+    title: 目标评分门槛
+    status: implemented
+    command: score-check
+    evidence: [score-check, release-ready]
+  - id: P0-014
+    title: 治理检查串联门
+    status: implemented
+    command: governance-check
+    evidence: [governance-check, makefile-baseline]
+  - id: P0-015
+    title: 执行上下文注册与校验
+    status: implemented
+    command: main-guard
+    evidence: [execution-context, main-guard, worktree-guard]
+  - id: P0-016
+    title: CI Pull Request 上下文路径
+    status: implemented
+    command: governance-check
+    evidence: [ci_pull_request, execution-context, github-governance]
+  - id: P0-017
+    title: Context Runtime v4 profile baseline
+    status: implemented
+    command: context-profile-check
+    evidence: [context-profile, context-profile-check, context-schema-check]
+  - id: P0-018
+    title: Context Runtime v4 release wrapper
+    status: implemented
+    command: context-release
+    evidence: [context-release, release-final-check, context-fast-check, context-standard-check, context-full-check]
+  - id: P1-001
+    title: 治理硬化矩阵
+    status: implemented
+    command: p1-governance-check
+    evidence: [agent-team-contract, scope-lock, pr-template, acceptance-matrix, runtime-health]
+  - id: P1-002
+    title: 策略与平台校验
+    status: implemented
+    command: p1-governance-check
+    evidence: [policy-schema, github-settings, toolchain]
+  - id: P1-003
+    title: 代理团队契约
+    status: implemented
+    command: agent-team-contract
+    evidence: [team-contract, agent-teams]
+  - id: P1-004
+    title: 作用域锁定矩阵
+    status: implemented
+    command: scope-lock
+    evidence: [scope-lock, scope-locks]
+  - id: P1-005
+    title: PR 模板契约
+    status: implemented
+    command: pr-template
+    evidence: [pr-template-contract, pull-request-template]
+  - id: P1-006
+    title: 验收矩阵
+    status: implemented
+    command: acceptance-matrix
+    evidence: [acceptance-matrix, harness-gates]
+  - id: P1-007
+    title: 运行时健康契约
+    status: implemented
+    command: runtime-health
+    evidence: [runtime-health, health-schema]
+  - id: P1-008
+    title: 目标运行时骨架
+    status: implemented
+    command: goal-runtime
+    evidence: [goal-runtime, harness]
+  - id: P1-009
+    title: 命名和模块角色
+    status: implemented
+    command: naming
+    evidence: [repository-roles, module-boundary]
+  - id: P1-010
+    title: 标准升级路径
+    status: implemented
+    command: upgrade-standard
+    evidence: [upgrade-standard, downstream-registry]
+  - id: P1-011
+    title: 一致性配置
+    status: implemented
+    command: conformance-profile
+    evidence: [conformance-profiles, attest-conformance]
+  - id: P1-012
+    title: 下游注册源
+    status: implemented
+    command: downstream-registry
+    evidence: [downstream-registry, downstream-baseline]
+  - id: P1-013
+    title: 自愈骨架
+    status: implemented
+    command: self-healing-skeleton
+    evidence: [failure-taxonomy, root-cause, regression-memory]
+  - id: P1-014
+    title: GitHub 治理设置
+    status: implemented
+    command: github-governance
+    evidence: [github-settings, ci_pull_request]
+  - id: P1-015
+    title: 供应链约束
+    status: implemented
+    command: supply-chain
+    evidence: [toolchain, security]
+  - id: P1-016
+    title: 变更日志骨架
+    status: implemented
+    command: changelog
+    evidence: [release-template, decision-log]
+  - id: P1-017
+    title: 治理夹具测试
+    status: implemented
+    command: governance-fixture-test
+    evidence: [harness, governance-fixture-test]
+  - id: P1-018
+    title: 自动研究记录
+    status: implemented
+    command: autoresearch
+    evidence: [autoresearch, decision-log]
+  - id: P1-019
+    title: 策略 Schema 覆盖
+    status: implemented
+    command: policy-schema
+    evidence: [policy-schema, contracts]
+  - id: P1-020
+    title: 证据工件策略
+    status: implemented
+    command: evidence-artifacts
+    evidence: [evidence-artifact-policy, evidence-pack]
+  - id: P1-021
+    title: 工具链契约
+    status: implemented
+    command: toolchain
+    evidence: [toolchain, makefile-baseline]
+  - id: P2-001
+    title: 运行时与一致性 dry-run 自动化
+    status: implemented
+    command: p2-runtime-check
+    evidence: [install-runtime, upgrade-runtime, attest-conformance, evidence-replay]
+  - id: P2-002
+    title: 下游采用证明为 patch-only 且 gap-explicit
+    status: implemented
+    command: downstream-adoption
+    evidence: [downstream-baseline, downstream-adoption]
+  - id: P2-003
+    title: 安装运行时夹具
+    status: implemented
+    command: install-runtime
+    evidence: [runtime-install, pack-standard]
+  - id: P2-004
+    title: 升级运行时夹具
+    status: implemented
+    command: upgrade-runtime
+    evidence: [runtime-upgrade, upgrade-standard]
+  - id: P2-005
+    title: 发布就绪公式
+    status: implemented
+    command: release-ready
+    evidence: [release-readiness-formula, score-check]
+  - id: P2-006
+    title: 证据回放
+    status: implemented
+    command: evidence-replay
+    evidence: [evidence-replay, evidence-pack]
+  - id: P2-007
+    title: 一致性证明
+    status: implemented
+    command: attest-conformance
+    evidence: [conformance-profiles, attest-conformance]
+  - id: P2-008
+    title: 标准包 dry-run
+    status: implemented
+    command: pack-standard
+    evidence: [standard-pack, pack-standard]
+  - id: P2-009
+    title: 门禁包 dry-run
+    status: implemented
+    command: pack-gate
+    evidence: [gate-pack, pack-gate]
+  - id: P2-010
+    title: 证据包 dry-run
+    status: implemented
+    command: pack-evidence
+    evidence: [evidence-pack, pack-evidence]
+  - id: P2-011
+    title: 运行时文件所有权
+    status: implemented
+    command: runtime-file-ownership
+    evidence: [runtime-file-ownership, worktree-guard]
+  - id: P2-012
+    title: 下游基线扫描
+    status: implemented
+    command: downstream-baseline
+    evidence: [downstream-baseline-scan, downstream-registry]
+  - id: P2-013
+    title: 下游采用模式
+    status: implemented
+    command: downstream-adoption
+    evidence: [downstream-adoption-modes, downstream-registry]
+  - id: P2-014
+    title: 发布检查串联
+    status: implemented
+    command: release-check
+    evidence: [release-check, p2-runtime-check]
+  - id: P2-015
+    title: 扩展发布检查串联
+    status: implemented
+    command: release-check-extended
+    evidence: [release-check-extended, p2-runtime-check]
+  - id: P2-016
+    title: goalcli v0.1.0 MVA 本地证据门
+    status: implemented
+    command: goal-runtime-final
+    evidence: [goal-acceptance, goal-delivery, goal-handover, goal-downstream-adoption, goal-certify, goal-runtime-final]
+  - id: CTX-001
+    title: Context Runtime v4 profile registry bridge
+    status: implemented
+    command: context-profile-check
+    evidence: [context-profile, command-registry, issue-registry, makefile-baseline]
+  - id: CTX-002
+    title: Context Runtime v4 standard profile baseline
+    status: implemented
+    command: context-standard
+    evidence: [context-standard, context-profile-check, docs-check]
+  - id: CTX-003
+    title: Context Runtime v4 full profile baseline
+    status: implemented
+    command: context-full
+    evidence: [context-full, p2-runtime-check]
+  - id: CTX-004
+    title: Context Runtime v4 release profile baseline
+    status: implemented
+    command: context-release
+    evidence: [context-release, standard-impact-check, release-evidence-check]

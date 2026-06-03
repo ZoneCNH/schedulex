@@ -1,0 +1,5 @@
+schema_version: "2.9.3"
+identity: xlib-standard
+kernel:
+  commands: [version, doctor, main-guard, worktree-guard, cli-contract]
+  invariants: [no_x_go_imports, no_secret_reads, local_write_not_on_main]

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# RULE-WORKTREE-001: 禁止直接 push 到 main/master
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
+
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+  echo "pre-push: 禁止直接 push 到 $BRANCH 分支。"
+  echo "请通过 PR 合入。"
+  exit 1
+fi

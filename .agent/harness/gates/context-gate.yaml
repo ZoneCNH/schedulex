@@ -1,0 +1,14 @@
+gate_id: GATE-CONTEXT
+name: Context Recovery Gate
+type: hybrid
+severity: P0
+target: context
+rules:
+  - 必须检查仓库结构、Makefile、CI、tests、.agent、docs
+  - 禁止引用不存在的能力 (RULE-CONTEXT-002)
+  - 上下文冲突必须进入 Decision Log (RULE-CONTEXT-003)
+commands:
+  - make context-check
+pass_condition: 所有上下文检查通过，无虚假能力引用
+fail_condition: 发现不存在的 target/脚本/目录引用
+evidence_required: reports/context-check.json

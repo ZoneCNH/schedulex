@@ -1,0 +1,17 @@
+gate_id: GATE-COMMIT
+name: Commit Gate
+type: executable
+severity: P1
+target: commit
+rules:
+  - Commit 必须绑定 Task/Issue/Evidence (RULE-COMMIT-001)
+  - 禁止无语义提交 (RULE-COMMIT-002)
+  - 禁止大杂烩提交 (RULE-COMMIT-003)
+  - Commit 前必须通过本地 Gate (RULE-COMMIT-004)
+commands:
+  - make worktree-check
+  - make lint
+  - make test
+pass_condition: commit message 包含 Refs/Closes/Evidence，本地 gate 通过
+fail_condition: commit message 无语义或本地 gate 失败
+evidence_required: commit message + gate output

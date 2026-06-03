@@ -1,0 +1,15 @@
+gate_id: GATE-PR
+name: PR Gate
+type: hybrid
+severity: P0
+target: pr
+rules:
+  - PR 必须是可审查交付单元 (RULE-PR-001)
+  - PR 必须包含 Traceability (RULE-PR-002)
+  - PR 合并条件必须满足 (RULE-PR-003)
+  - 禁止直接合并未验证 PR (RULE-PR-004)
+commands:
+  - make pr-check
+pass_condition: PR 包含 Goal/Issues/Evidence/Traceability，CI 和 Harness 通过
+fail_condition: PR 缺少 Evidence 或 Traceability，或 CI 未通过
+evidence_required: PR description + CI result

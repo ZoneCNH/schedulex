@@ -1,0 +1,15 @@
+gate_id: GATE-WORKTREE
+name: Worktree Gate
+type: executable
+severity: P0
+target: worktree
+rules:
+  - 禁止 main 开发 (RULE-WORKTREE-001)
+  - 所有开发必须使用 git worktree (RULE-WORKTREE-002)
+  - 分支必须绑定 Goal/Task (RULE-WORKTREE-003)
+commands:
+  - make worktree-check
+  - scripts/harness/no-main-dev.sh
+pass_condition: 当前不在 main 分支开发，worktree 分支命名符合规范
+fail_condition: 检测到 main 分支上的开发活动
+evidence_required: reports/worktree-check.txt

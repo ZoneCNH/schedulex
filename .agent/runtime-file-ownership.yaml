@@ -1,0 +1,90 @@
+schema_version: "2.9.3"
+# 路径归属与 PR 路由分类。
+# 角色名称是抽象类别，不是 GitHub 用户/团队（参见 .github/CODEOWNERS）。
+# 仓库绑定真实维护团队后，由 .github/CODEOWNERS 完成账号映射，本文件保持类别稳定。
+#
+# 字段：
+#   owner            -- 抽象角色（governance / gate-runtime / leader / standard / release / ci / testing / security）
+#   review_required  -- 修改时是否要求额外审查（PR-check 可据此打 label）
+#   rationale        -- 为什么这个路径敏感
+owners:
+  ".agent/":
+    owner: governance
+    review_required: true
+    rationale: 控制平面（规则、契约、registry），漂移会影响所有 Gate
+  ".agent/rules/iron-rules.md":
+    owner: leader
+    review_required: true
+    rationale: 七条铁律是最高 SSOT，修改需要 ADR
+  ".agent/rules/registry.yaml":
+    owner: governance
+    review_required: true
+    rationale: 全部 P0/P1/P2/P3 规则总账，新增规则必须经 RULE-CHANGE 流程
+  ".agent/harness/":
+    owner: gate-runtime
+    review_required: true
+    rationale: Gate 定义；修改可能改变 release/PR 阻断行为
+  "cmd/goalcli/":
+    owner: gate-runtime
+    review_required: true
+    rationale: 机器裁判内核，所有 Gate 的最终执行者
+  "internal/goalcli/":
+    owner: gate-runtime
+    review_required: true
+    rationale: goalcli 子模块实现
+  "internal/releasequality/":
+    owner: release
+    review_required: true
+    rationale: score 计算决定 release 阻断阈值
+  "scripts/check_secrets.sh":
+    owner: security
+    review_required: true
+    rationale: secret 扫描规则；弱化会引入 secret 泄漏风险
+  ".githooks/":
+    owner: security
+    review_required: true
+    rationale: pre-commit/pre-push 阻断；弱化等于关闭本地 P0 防线
+  ".github/workflows/":
+    owner: ci
+    review_required: true
+    rationale: CI 阻断流水线；与本地 make ci 必须 parity
+  ".github/CODEOWNERS":
+    owner: governance
+    review_required: true
+    rationale: 账号到角色的映射，决定 PR 强制审查名单
+  "Makefile":
+    owner: ci
+    review_required: true
+    rationale: 本地 Gate 入口，本地与 CI 必须 parity (RULE-PARITY-001)
+  "pkg/templatex/":
+    owner: standard
+    review_required: true
+    rationale: 公共 API 模板，下游库会渲染消费，破坏性变更影响所有下游
+  "contracts/":
+    owner: standard
+    review_required: true
+    rationale: schema 契约；破坏 downstream adoption
+  "release/":
+    owner: release
+    review_required: true
+    rationale: manifest/evidence 归档，发布证据 SSOT
+  "testkit/":
+    owner: testing
+    review_required: false
+    rationale: 测试夹具，下游测试可复用
+  "docs/standard/":
+    owner: standard
+    review_required: true
+    rationale: 标准文档，权威源
+  "docs/goal.md":
+    owner: leader
+    review_required: true
+    rationale: 当前 Goal 主控文档
+  "CONSTITUTION.md":
+    owner: leader
+    review_required: true
+    rationale: 项目章程，权威顺序定义
+  "AGENTS.md":
+    owner: governance
+    review_required: false
+    rationale: Agent 协作指南
