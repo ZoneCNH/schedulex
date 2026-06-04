@@ -59,7 +59,7 @@ go test ./... -run 'Test.*Golden|Test.*Snapshot'       # golden 测试
 GOWORK=off make release-check
 XLIB_CONTEXT=release_verify GOWORK=off make release-final-check
 XLIB_CONTEXT=release_verify GOWORK=off make release-preflight VERSION=v0.4.6
-make evidence                                    # 生成 release/manifest/latest.json
+make evidence                                    # 生成 release/downstream-adoption/latest.json
 ```
 
 ### 模板渲染（生成下游库）

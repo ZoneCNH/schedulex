@@ -475,10 +475,8 @@ func ReconcileMisfire(policy MisfirePolicy, missed []time.Time) []time.Time
 | 错误 | 说明 |
 |------|------|
 | `ErrSchedulerClosed` | 对已关闭的调度器执行变更操作 |
-| `ErrSchedulerShutdown` | `ErrSchedulerClosed` 的兼容别名 |
 | `ErrJobExists` | 注册重复的任务 ID |
 | `ErrInvalidJob` | 任务定义不完整（名称或触发器缺失） |
-| `ErrJobInvalid` | `ErrInvalidJob` 的兼容别名 |
 | `ErrInvalidOption` | 选项违反调度器合约 |
 | `ErrLockUnavailable` | 锁适配器无法获取租约 |
 

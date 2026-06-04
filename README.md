@@ -64,4 +64,4 @@ GOWORK=off make trigger-determinism-check misfire-contract-check timezone-dst-go
 GOWORK=off make release-preflight VERSION=v0.1.0
 ```
 
-Evidence 输出位于 `release/manifest/latest.json`，校验和位于 `release/manifest/latest.json.sha256`。最终完成声明必须包含 `DONE with evidence:`。
+Evidence 输出位于 `release/downstream-adoption/latest.json`，校验和位于 `release/downstream-adoption/latest.json.sha256`。最终完成声明必须包含 `DONE with evidence:`。
