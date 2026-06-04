@@ -3,18 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
+	"sync"
 
 	"github.com/ZoneCNH/schedulex/pkg/schedulex"
 )
 
-type noopLocker struct{}
-type noopLease struct{}
-
-func (noopLocker) Acquire(context.Context, string, time.Duration) (schedulex.Lease, error) { return noopLease{}, nil }
-func (noopLease) Release(context.Context) error { return nil }
+type memLocker struct{ mu sync.Mutex; held bool }
+type lease struct{ l *memLocker }
+func (m *memLocker) Lock(context.Context, string) (schedulex.Lease, error) { m.mu.Lock(); defer m.mu.Unlock(); if m.held { return nil, schedulex.ErrLockUnavailable }; m.held = true; return lease{m}, nil }
+func (l lease) Release(context.Context) error { l.l.mu.Lock(); defer l.l.mu.Unlock(); l.l.held = false; return nil }
 
 func main() {
-	lease, _ := noopLocker{}.Acquire(context.Background(), "job", time.Second)
-	fmt.Println(lease.Release(context.Background()) == nil)
+	_, err := (&memLocker{}).Lock(context.Background(), "job")
+	fmt.Println(err == nil)
 }

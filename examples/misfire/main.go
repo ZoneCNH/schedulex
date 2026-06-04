@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
-	missed := []time.Time{time.Unix(1, 0), time.Unix(2, 0)}
-	fmt.Println(len(schedulex.ReconcileMisfire(schedulex.MisfireRunOnce, missed)))
+	base := time.Date(2026,1,1,0,0,0,0,time.UTC)
+	d := schedulex.PlanMisfire(schedulex.MisfireRunOnce, []time.Time{base, base.Add(time.Minute)}, time.Time{}, false)
+	fmt.Println(len(d.Runs))
 }
