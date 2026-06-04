@@ -2,18 +2,28 @@ package schedulex
 
 import "time"
 
-// Clock supplies time to the scheduler. Scheduler decisions use this interface
-// so deterministic tests can avoid wall-clock time.
+// Clock supplies time to deterministic scheduling decisions.
 type Clock interface {
 	Now() time.Time
-	After(time.Duration) <-chan time.Time
 }
 
-type realClock struct{}
+type systemClock struct{}
 
-// NewRealClock returns the production wall-clock adapter. Wall-clock access is
-// isolated here; scheduling decisions use Clock.
-func NewRealClock() Clock { return realClock{} }
+// SystemClock returns a Clock backed by time.Now for edge adapters.
+func SystemClock() Clock { return systemClock{} }
 
-func (realClock) Now() time.Time                 { return time.Now() }
-func (realClock) After(d time.Duration) <-chan time.Time { return time.After(d) }
+func (systemClock) Now() time.Time { return time.Now() }
+
+// StaticClock is a test/replay clock with explicit advancement.
+type StaticClock struct {
+	now time.Time
+}
+
+// NewStaticClock constructs a replay clock pinned to t.
+func NewStaticClock(t time.Time) *StaticClock { return &StaticClock{now: t} }
+
+// Now returns the clock's current instant.
+func (c *StaticClock) Now() time.Time { return c.now }
+
+// Advance moves the clock forward by d.
+func (c *StaticClock) Advance(d time.Duration) { c.now = c.now.Add(d) }
