@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"schedulex lifecycle event","type":"object","required":["type","job_id","at"],"properties":{"type":{"enum":["scheduled","started","succeeded","failed","skipped"]},"job_id":{"type":"string"},"at":{"type":"string","format":"date-time"},"scheduled_at":{"type":"string","format":"date-time"},"error":{"type":"string"}}}

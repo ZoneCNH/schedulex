@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"schedulex release manifest","type":"object","required":["module","version","artifacts","checks"],"properties":{"module":{"const":"github.com/ZoneCNH/schedulex"},"version":{"const":"v0.1.0"},"artifacts":{"type":"array"},"checks":{"type":"array"}}}
