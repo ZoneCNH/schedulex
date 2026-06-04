@@ -19,7 +19,7 @@ DONE with evidence:
 
 - `release/manifest/latest.json`：由 `make evidence` 生成。`latest.json is a generated Evidence artifact`，`MUST NOT be committed`。
 - `release/standard-impact/latest.md`：由 `GOWORK=off make standard-impact-check` 生成，记录标准影响面、`downstream_sync_required`、`downstream_release_decision` 和 `repository_rules_release_decision` 结论。
-- release score：来自 `GOWORK=off go run ./cmd/goalcli score --min 9.8`，并写入 manifest 的 `score` 字段。
+- release score：来自 `GOWORK=off go run ./cmd/schedulex score --min 9.8`，并写入 manifest 的 `score` 字段。
 - workflow artifact 元数据：manifest 的 `workflow_run_id`、`artifact_name`、`artifact_url` 必须能对齐 CI 上传的 release manifest artifact；本地运行时可记录 `local:*` Evidence URL。
 - gate 输出：来自本地命令或 CI job。
 - review/retrospective：当变更触达标准、release 或 generator 时必须更新。
@@ -53,7 +53,7 @@ make release-final-check
   -> 要求工作区 clean 后再次校验 release Evidence
 ```
 
-Context Runtime v4.0 / `REQ-014` 的链路必须保持单向：`context-release` 不得依赖或调用 `release-check` / `release-final-check`；`release-final-check` 必须调用 `context-release`，并且不得自递归。profile wrapper、Makefile target、`cmd/goalcli` 命令和 registry bridge 已经落地；完成声明必须用实际 gate 输出支撑，不能用目标态文字替代。物理 `.agent/context/*` packs/templates 只有在文件真实存在且被 registry/evidence 覆盖时才能宣称已交付。
+Context Runtime v4.0 / `REQ-014` 的链路必须保持单向：`context-release` 不得依赖或调用 `release-check` / `release-final-check`；`release-final-check` 必须调用 `context-release`，并且不得自递归。profile wrapper、Makefile target、`cmd/schedulex` 命令和 registry bridge 已经落地；完成声明必须用实际 gate 输出支撑，不能用目标态文字替代。物理 `.agent/context/*` packs/templates 只有在文件真实存在且被 registry/evidence 覆盖时才能宣称已交付。
 
 本地 release gate 必须运行 `GOWORK=off make dependency-check`、`GOWORK=off make standard-impact-check` 和 `GOWORK=off make docs-check`。
 
@@ -104,7 +104,7 @@ Goal 或 Release 级完成声明必须覆盖以下字段，缺失项要写入 `k
 - `contract fingerprint`：manifest 中的 contract 指纹或 digest。
 - `dependency list`：manifest 中的依赖清单状态。
 - `tool versions`：manifest 中的 Go、工具链和 gate 工具版本状态。
-- `release score`：`goalcli score` 的阈值和 manifest `score` 校验状态。
+- `release score`：`schedulex score` 的阈值和 manifest `score` 校验状态。
 - `workflow artifact`：`workflow_run_id`、`artifact_name`、`artifact_url` 或明确的本地 artifact 说明。
 - `gates`：`fmt`、`vet`、`test`、`race`、`lint`、`security`、`contracts`、`boundary`、`integration`、`dependency-check`、`standard-impact-check`、`evidence`、`release-evidence-check`、`release-final-check`。
 - `rendered downstream`：`kernel` 和 `corekit` 的 generator 验证状态；旧 `foundationx` 仅作为迁移扫描项记录。

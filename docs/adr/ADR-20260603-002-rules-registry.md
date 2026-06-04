@@ -9,7 +9,7 @@ Supersedes: 无（与 ADR-20260603-001 互补）
 `.worktree/goal-patch.md`（13856 行, 336 节, 419 个 RULE-* ID）是 Goal Runtime v1.0–v2.2 的完整推导记录。它有三个问题：
 
 1. **不可机器读** —— 规则散落在 Markdown 散文中，无统一字段。
-2. **缺 enforced_by 绑定** —— 规则与 `goalcli` 子命令的对应关系靠人工记忆。
+2. **缺 enforced_by 绑定** —— 规则与 `schedulex` 子命令的对应关系靠人工记忆。
 3. **严重重复** —— v1.0 / v1.2 / v1.3 / v1.4 / v1.9 各有一份"最终铁律"，违反 RULE-DOC-001。
 
 同时 `.agent/rules/*.md` 11 个文件只覆盖 v1.0 的约 35 条规则（8%），v1.1–v2.2 增量的 380+ 条规则从未进入仓库。
@@ -31,9 +31,9 @@ iron-rules.md  >  registry.yaml  >  *-rules.md  >  ADR-*  >  .worktree/goal-patc
 
 ## Rationale
 
-- **机器化优先 (RULE-CODE-001)**：YAML 比散文更容易被 `goalcli rules verify`（未来）消费，也更容易被 CI 当成 fixture 比对。
+- **机器化优先 (RULE-CODE-001)**：YAML 比散文更容易被 `schedulex rules verify`（未来）消费，也更容易被 CI 当成 fixture 比对。
 - **不重写 11 个 `*-rules.md`**：它们已经被 governance test 引用，破坏性变更需要单独 ADR。本 ADR 仅"叠加"两个新文件。
-- **不新建 `tools/goalcli/`**：遵循 ADR-20260603-001，所有 enforced_by 指向已存在的 `goalcli` 子命令或 `scripts/` 脚本。
+- **不新建 `tools/schedulex/`**：遵循 ADR-20260603-001，所有 enforced_by 指向已存在的 `schedulex` 子命令或 `scripts/` 脚本。
 - **保留 `.worktree/goal-patch.md`**：作为历史推导记录，不删除，但明确"考古"地位。
 
 ## Consequences

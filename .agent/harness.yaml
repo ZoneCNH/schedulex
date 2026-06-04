@@ -14,7 +14,7 @@ required_gates:
     purpose: "unit, contract, and example smoke tests"
   - id: boundary
     command: "GOWORK=off make boundary"
-    purpose: "module identity, x.go/L2+ import ban, no pkg/templatex"
+    purpose: "module identity, x.go/L2+ import ban, no pkg/schedulex"
   - id: schedulex_checks
     command: "GOWORK=off make schedulex-checks"
     purpose: "deterministic scheduler L1 gate pack"

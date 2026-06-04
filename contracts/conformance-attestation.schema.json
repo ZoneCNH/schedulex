@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/ZoneCNH/xlib-standard/contracts/conformance-attestation.schema.json",
+  "$id": "https://github.com/ZoneCNH/schedulex/contracts/conformance-attestation.schema.json",
   "type": "object",
   "required": ["profile", "status", "evidence"],
   "properties": {

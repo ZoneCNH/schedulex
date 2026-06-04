@@ -17,7 +17,7 @@
 ## `/home/k8s/secrets/env/*` 规则
 
 - 该路径只属于调用方组合层，例如 `x.go` 或业务服务。
-- `xlib-standard`、`kernel` 和生成基础库不得读取该路径。
+- `schedulex`、`kernel` 和生成基础库不得读取该路径。
 - 调用方可以读取该路径并把显式 `Config` 传给基础库。
 - 源码、README、测试日志、release manifest、Evidence、Issue 和 PR 描述不得包含该路径下的真实内容。
 

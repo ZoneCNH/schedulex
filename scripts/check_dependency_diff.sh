@@ -109,7 +109,7 @@ for file in "${changed_files[@]}"; do
   esac
 
   case "$file" in
-    contracts/*|docs/standard/*|scripts/*|cmd/goalcli/*|internal/tools/*|release/manifest/template.json)
+    contracts/*|docs/standard/*|scripts/*|cmd/schedulex/*|internal/tools/*|release/manifest/template.json)
       review_surface=true
       ;;
   esac

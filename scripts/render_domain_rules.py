@@ -8,7 +8,7 @@
 输出:
   - .agent/rules/core-rules.md             (CORE/CONTEXT/STATE/SSOT/ID/MODE 等)
   - .agent/rules/schema-registry-rules.md  (SCHEMA/REGISTRY/GOALPACK/MIGRATION 等)
-  - .agent/rules/agent-runtime-rules.md    (AGENT/LEASE/HEARTBEAT/CMD-TXN/goalcli 等)
+  - .agent/rules/agent-runtime-rules.md    (AGENT/LEASE/HEARTBEAT/CMD-TXN/schedulex 等)
 
 设计:
   - 不重写 iron-rules.md 已覆盖的 7 条铁律, 但允许域文件中重复引用 RULE-CORE-001..006
@@ -97,7 +97,7 @@ BUCKETS: dict[str, dict] = {
         "intro": (
             "本文件覆盖 Goal Runtime **执行平面层**规则：Agent 协议与边界、"
             "并发与租约、命令事务与 dry-run、Bootstrap/Doctor/Repair、Dashboard "
-            "与度量、`goalcli` 工具链架构、控制平面与报告规范。\n\n"
+            "与度量、`schedulex` 工具链架构、控制平面与报告规范。\n\n"
             "对应 Gate：`runtime-doctor`、`runtime-repair`、`dashboard`、"
             "`cmd-txn-check`、`cli-contract`、`gate-dag-check`。"
         ),
@@ -200,7 +200,7 @@ def main() -> int:
     src_lines = src_text.split("\n")
 
     # 收集源章节标题表（同时支持 # N. 与 ## N.）；
-    # 只取首次出现，避免后续 v2.1 §314 中的步骤编号 (# 1. 初始化 goalcli 等) 覆盖真实章节。
+    # 只取首次出现，避免后续 v2.1 §314 中的步骤编号 (# 1. 初始化 schedulex 等) 覆盖真实章节。
     src_titles: dict[int, str] = {}
     sec_re = re.compile(r"^#{1,2} (\d+)\.\s+(.+)$")
     for ln in src_lines:

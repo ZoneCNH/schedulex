@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/ZoneCNH/xlib-standard/contracts/policy.schema.json",
+  "$id": "https://github.com/ZoneCNH/schedulex/contracts/policy.schema.json",
   "type": "object",
   "required": ["schema_version", "module", "rules"],
   "properties": {

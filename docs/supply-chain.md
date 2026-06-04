@@ -50,7 +50,7 @@ Release manifest 相关测试必须在临时 fixture 仓库内构造所需 `.omc
 
 ## Score 与 Workflow Evidence
 
-供应链 Evidence 必须包含可机器校验的 `score` 与 workflow artifact 元数据。`score` 来自 `go run ./cmd/goalcli score --min 9.8`，用于汇总 manifest schema、release gate、security scan、scorecard 文档、release/retrospective 模板等发布质量维度。`workflow_run_id`、`artifact_name`、`artifact_url` 用于追踪 CI 上传的 `release/manifest/latest.json` 与 `release/manifest/latest.json.sha256`，防止只有本地文件而没有外部 artifact 留痕。
+供应链 Evidence 必须包含可机器校验的 `score` 与 workflow artifact 元数据。`score` 来自 `go run ./cmd/schedulex score --min 9.8`，用于汇总 manifest schema、release gate、security scan、scorecard 文档、release/retrospective 模板等发布质量维度。`workflow_run_id`、`artifact_name`、`artifact_url` 用于追踪 CI 上传的 `release/manifest/latest.json` 与 `release/manifest/latest.json.sha256`，防止只有本地文件而没有外部 artifact 留痕。
 
 ## Dependency debt purpose
 

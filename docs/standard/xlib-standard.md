@@ -1,12 +1,12 @@
 # 基础库总标准
 
-本文定义 `x.go` 基础库体系的最小生产标准。`xlib-standard` 是 [`https://github.com/ZoneCNH/xlib-standard`](https://github.com/ZoneCNH/xlib-standard) 对应的统一仓库，同时承担 Standard Source、Go Reference Template、Generator、Harness 和 Evidence Runtime。旧 `baselib-template` 只作为迁移文档语境中的兼容名出现，不再表示独立主实现仓库。
+本文定义 `x.go` 基础库体系的最小生产标准。`schedulex` 是 [`https://github.com/ZoneCNH/schedulex`](https://github.com/ZoneCNH/schedulex) 对应的统一仓库，同时承担 Standard Source、Go Reference Template、Generator、Harness 和 Evidence Runtime。旧 `baselib-template` 只作为迁移文档语境中的兼容名出现，不再表示独立主实现仓库。
 
 ## 仓库定位
 
-- `xlib-standard`：标准权威源，也是 Go 基础库模板、generator、Harness 和 Evidence 实现仓库。
+- `schedulex`：标准权威源，也是 Go 基础库模板、generator、Harness 和 Evidence 实现仓库。
 - `kernel`：默认 L0 下游集成目标，用于证明模板生成和基础能力边界。
-- 生成库：由 `xlib-standard` 渲染得到的具体基础库，必须遵守本标准，并通过自身 Harness 和 Evidence 证明符合性。
+- 生成库：由 `schedulex` 渲染得到的具体基础库，必须遵守本标准，并通过自身 Harness 和 Evidence 证明符合性。
 - 旧 `baselib-template` / `foundationx`：仅允许在迁移文档语境中出现。
 
 ## 标准目标
@@ -18,7 +18,7 @@
 
 ## 分层
 
-- Standard：`xlib-standard`，同时是 Standard 规则的独立来源和 Go 基础库模板中的实现仓库。
+- Standard：`schedulex`，同时是 Standard 规则的独立来源和 Go 基础库模板中的实现仓库。
 - L0：`kernel` 等语言级、无业务依赖的公共能力。
 - L1：面向具体中间件或基础设施的库，例如 `postgresx`、`redisx`、`kafkax`、`taosx`、`ossx`、`clickhousex`。
 - L2：组合多个基础能力的技术组件。
@@ -26,10 +26,10 @@
 
 ## 依赖方向
 
-- 依赖方向只能从 Business 指向 L2/L1/L0/Standard，或从具体库继承 `xlib-standard`。
-- `xlib-standard` 不得依赖 `x.go`、业务仓库、profile-specific runtime 或生成库真实 runtime。
+- 依赖方向只能从 Business 指向 L2/L1/L0/Standard，或从具体库继承 `schedulex`。
+- `schedulex` 不得依赖 `x.go`、业务仓库、profile-specific runtime 或生成库真实 runtime。
 - 生成库不得依赖 `x.go`、业务模型或调用方生产密钥路径。
-- `/home/k8s/secrets/env/*` 是调用方部署路径；`xlib-standard`、`kernel` 和生成库不得读取该路径作为默认配置源，也不得把其内容写入源码、README、测试日志、release manifest、PR 描述或 Evidence。
+- `/home/k8s/secrets/env/*` 是调用方部署路径；`schedulex`、`kernel` 和生成库不得读取该路径作为默认配置源，也不得把其内容写入源码、README、测试日志、release manifest、PR 描述或 Evidence。
 
 ## 公共 API
 
@@ -69,6 +69,6 @@
 
 - `GOWORK=off make release-final-check`
 - `GOWORK=off make release-preflight VERSION=<version>`
-- `goalcli score --min 9.8`
+- `schedulex score --min 9.8`
 
 最终声明必须使用 `DONE with evidence:`，并列出 manifest、checksum、score、kernel downstream smoke 和所有未运行项。

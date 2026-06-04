@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "xlib-standard agent policy",
+  "title": "schedulex agent policy",
   "type": "object",
   "required": ["policy_id", "scope", "forbidden"],
   "properties": {

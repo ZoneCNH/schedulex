@@ -1,6 +1,6 @@
 # Release Scorecard
 
-`go run ./cmd/goalcli score --min 9.8` 是发布质量分的可执行入口，默认输出 JSON，并在分数低于 `--min` 时以非零状态失败。分数不会替代 `make ci`、`make security` 或 `make release-final-check`，而是把 release manifest、workflow artifact、security gate、retrospective patch 和文档约束汇总为一个可审计信号。
+`go run ./cmd/schedulex score --min 9.8` 是发布质量分的可执行入口，默认输出 JSON，并在分数低于 `--min` 时以非零状态失败。分数不会替代 `make ci`、`make security` 或 `make release-final-check`，而是把 release manifest、workflow artifact、security gate、retrospective patch 和文档约束汇总为一个可审计信号。
 
 ## 语义边界
 
@@ -18,7 +18,7 @@ Context Runtime v4.0 迁移期间，score 也不能替代 `context-standard`、`
 | --- | --- |
 | `scorecard_doc` | 本文件记录评分规则和阈值。 |
 | `manifest_score_schema` | `release/manifest/template.json` 包含 `score`、`workflow_run_id`、`artifact_url`。 |
-| `score_cli` | `cmd/goalcli` 提供 `score --min` 命令。 |
+| `score_cli` | `cmd/schedulex` 提供 `score --min` 命令。 |
 | `score_gate` | `Makefile` 在 release gate 中执行 score threshold；该维度验证 wiring，不验证业务语义。 |
 | `manifest_min_score_verify` | `scripts/check_release_evidence.sh` 把 `RELEASE_EVIDENCE_MIN_SCORE` 传入 manifest 校验。 |
 | `security_gate` | secret scan 脚本覆盖 provider token 与 private key 模式；真实安全结论仍以 `make security` 执行为准。 |
@@ -30,7 +30,7 @@ Context Runtime v4.0 迁移期间，score 也不能替代 `context-standard`、`
 ## Gate 契约
 
 - `GOWORK=off make release-check` 会运行 `score-check`，默认要求 `score >= 9.8`。
-- `GOWORK=off make release-final-check` 会再次运行 `go run ./cmd/goalcli score --min 9.8`，并要求 release manifest 内记录的 `score.value` 满足 `RELEASE_EVIDENCE_MIN_SCORE=9.8`。
+- `GOWORK=off make release-final-check` 会再次运行 `go run ./cmd/schedulex score --min 9.8`，并要求 release manifest 内记录的 `score.value` 满足 `RELEASE_EVIDENCE_MIN_SCORE=9.8`。
 - `release/manifest/latest.json` 会记录 `score` 和 `workflow`，其中 `workflow_run_id`、`artifact_name`、`artifact_url` 用于连接 CI artifact；本地运行时使用 `local:*` evidence URL。
 - Standard Impact v4.0 必须区分 `context_runtime`、`governance_registry`、`repository_rules` 和 `downstream_context` 影响面，并把 `downstream_release_decision` 与 `repository_rules_release_decision` 写入 Evidence；score 不能替代这些 release decision。
 

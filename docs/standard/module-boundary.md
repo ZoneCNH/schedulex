@@ -1,17 +1,17 @@
 # 模块边界
 
-本文件约束 `xlib-standard`、生成基础库、`kernel` 和 `x.go` 的模块边界。边界违规必须在 PR、review 或 release gate 中阻断。旧名 `baselib-template` 只保留为迁移兼容名，不再是主仓库角色。
+本文件约束 `schedulex`、生成基础库、`kernel` 和 `x.go` 的模块边界。边界违规必须在 PR、review 或 release gate 中阻断。旧名 `baselib-template` 只保留为迁移兼容名，不再是主仓库角色。
 
-## `xlib-standard` 允许内容
+## `schedulex` 允许内容
 
 - P0 标准文档与版本说明。
 - 仓库角色、分层、模块边界、下游兼容性规则和 module path 规则。
-- Go 参考模板 `pkg/templatex`、contracts schema、metrics contract 和测试夹具。
+- Go 参考模板 `pkg/schedulex`、contracts schema、metrics contract 和测试夹具。
 - generator、模板元数据、渲染脚本和生成库矩阵。
 - Makefile、scripts、CI、docs-check、boundary、contracts、integration、release 和 score gate。
 - `.agent/` Full Goal Runtime v3.1 工件、review/release/retrospective 模板、Evidence 生成器和 release manifest 协议实现。
 
-## `xlib-standard` 禁止内容
+## `schedulex` 禁止内容
 
 - 真实 `kernel`、PostgreSQL、Redis、Kafka、OSS、ClickHouse、TDengine runtime。
 - `x.go` import 或以 `x.go` 为构建前提。

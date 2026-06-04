@@ -6,8 +6,8 @@ usage() {
 Usage:
   scripts/render_template.sh --module-name NAME --module-path PATH --package-name NAME --out DIR
 
-Renders xlib-standard into a concrete base library by copying the repository,
-moving pkg/templatex to pkg/<package>, and replacing template identifiers.
+Renders schedulex into a concrete base library by copying the repository,
+moving pkg/schedulex to pkg/<package>, and replacing template identifiers.
 USAGE
 }
 
@@ -111,9 +111,9 @@ out_dir="$out_abs"
   tar -xf -
 )
 
-if [[ "$package_name" != "templatex" ]]; then
+if [[ "$package_name" != "schedulex" ]]; then
   mkdir -p "$out_dir/pkg"
-  mv "$out_dir/pkg/templatex" "$out_dir/pkg/$package_name"
+  mv "$out_dir/pkg/schedulex" "$out_dir/pkg/$package_name"
 fi
 
 replace_in_text_files() {
@@ -139,16 +139,16 @@ replace_in_text_files() {
 replace_in_text_files '{{MODULE_NAME}}' "$module_name"
 replace_in_text_files '{{MODULE_PATH}}' "$module_path"
 replace_in_text_files '{{PACKAGE_NAME}}' "$package_name"
-replace_in_text_files 'github.com/ZoneCNH/xlib-standard' "$module_path"
+replace_in_text_files 'github.com/ZoneCNH/schedulex' "$module_path"
 replace_in_text_files 'github.com/ZoneCNH/baselib-template' "$module_path"
-replace_in_text_files 'xlib-standard' "$module_name"
+replace_in_text_files 'schedulex' "$module_name"
 replace_in_text_files 'baselib-template' "$module_name"
 package_title="$(printf '%s%s' "$(printf '%s' "${package_name:0:1}" | tr '[:lower:]' '[:upper:]')" "${package_name:1}")"
 package_upper="$(printf '%s' "$package_name" | tr '[:lower:]' '[:upper:]')"
-replace_in_text_files 'templatex_' "${package_name}_"
+replace_in_text_files 'schedulex_' "${package_name}_"
 replace_in_text_files 'Templatex' "$package_title"
 replace_in_text_files 'TEMPLATEX' "$package_upper"
-replace_in_text_files 'templatex' "$package_name"
+replace_in_text_files 'schedulex' "$package_name"
 
 (
   cd "$out_dir"

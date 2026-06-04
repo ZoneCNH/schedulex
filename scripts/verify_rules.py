@@ -2,7 +2,7 @@
 """验证 .agent/rules/registry.yaml 中每条 active 规则的 enforced_by 命令真实存在。
 
 校验规则:
-  - "goalcli <sub>"   → <sub> 必须在 cmd/goalcli/main.go 的 case 分支中
+  - "schedulex <sub>"   → <sub> 必须在 cmd/schedulex/main.go 的 case 分支中
   - "make <target>"    → <target> 必须在 Makefile 中声明
   - ".githooks/<x>"    → 文件必须存在
   - "scripts/<x>"      → 文件必须存在
@@ -26,11 +26,11 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / ".agent" / "rules" / "registry.yaml"
-MAIN_GO = ROOT / "cmd" / "goalcli" / "main.go"
+MAIN_GO = ROOT / "cmd" / "schedulex" / "main.go"
 MAKEFILE = ROOT / "Makefile"
 
 
-def load_goalcli_commands() -> set[str]:
+def load_schedulex_commands() -> set[str]:
     text = MAIN_GO.read_text(encoding="utf-8")
     cmds: set[str] = set()
     for line in text.splitlines():
@@ -58,13 +58,13 @@ def resolve(enforced_by: str, xcmds: set[str], mtargets: set[str]) -> str | None
         return None  # 应配合 status=indexed 检查
     parts = enforced_by.split()
     head = parts[0]
-    if head == "goalcli":
+    if head == "schedulex":
         if len(parts) == 1:
-            return None  # 裸 "goalcli" 视为命令本身存在
+            return None  # 裸 "schedulex" 视为命令本身存在
         sub = parts[1]
         if sub in xcmds:
             return None
-        return f"unknown goalcli subcommand: {sub}"
+        return f"unknown schedulex subcommand: {sub}"
     if head == "make":
         if len(parts) < 2:
             return "make without target"
@@ -85,7 +85,7 @@ def main() -> int:
         print(f"ERROR: failed to load {REGISTRY}: {exc}", file=sys.stderr)
         return 2
 
-    xcmds = load_goalcli_commands()
+    xcmds = load_schedulex_commands()
     mtargets = load_make_targets()
 
     problems: list[str] = []
@@ -111,7 +111,7 @@ def main() -> int:
     active = sum(1 for r in data["rules"] if r.get("status") == "active")
     print(f"rules total: {total}")
     print(f"rules active: {active}")
-    print(f"goalcli subcommands available: {len(xcmds)}")
+    print(f"schedulex subcommands available: {len(xcmds)}")
     print(f"makefile targets available: {len(mtargets)}")
 
     if problems:

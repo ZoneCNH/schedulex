@@ -1,20 +1,20 @@
 # 下游同步策略
 
-本文定义 `xlib-standard` 变更后如何同步到下游基础库。`xlib-standard` 是 Standard Source、Go Reference Template、Generator、Harness 和 Evidence Runtime 的唯一标准源；下游只消费这些标准和模板结果，不反向决定标准内容。
+本文定义 `schedulex` 变更后如何同步到下游基础库。`schedulex` 是 Standard Source、Go Reference Template、Generator、Harness 和 Evidence Runtime 的唯一标准源；下游只消费这些标准和模板结果，不反向决定标准内容。
 
-旧 `baselib-template` 和 `foundationx` 名称只保留在迁移文档语境中。当前持久同步目标使用 `kernel` 与 L1/L2 基础库命名；`corekit` 仅作为中性路径 smoke/integration 验证目标，`xlib-standard` 是标准源而不是下游同步目标。
+旧 `baselib-template` 和 `foundationx` 名称只保留在迁移文档语境中。当前持久同步目标使用 `kernel` 与 L1/L2 基础库命名；`corekit` 仅作为中性路径 smoke/integration 验证目标，`schedulex` 是标准源而不是下游同步目标。
 
 ## 角色
 
 | 角色 | 当前名称 | 同步关系 |
 | --- | --- | --- |
-| Standard Source | `xlib-standard` | 定义标准、边界、gate、Evidence 和下游同步规则 |
-| Go Reference Template | `xlib-standard` | 提供可渲染模板和参考实现 |
-| Generator | `scripts/render_template.sh` / `cmd/goalcli integration` | 把模板渲染为具体基础库 |
+| Standard Source | `schedulex` | 定义标准、边界、gate、Evidence 和下游同步规则 |
+| Go Reference Template | `schedulex` | 提供可渲染模板和参考实现 |
+| Generator | `scripts/render_template.sh` / `cmd/schedulex integration` | 把模板渲染为具体基础库 |
 | L0 代表下游 | `kernel` | 第一优先级同步目标，验证最小基础库形态 |
 | L1 基础库 | `configx`、`observex`、`testkitx` | 继承 L0 标准并提供基础能力 |
 | L2 基础库 | `postgresx`、`redisx`、`kafkax`、`taosx`、`ossx`、`clickhousex` | 在 L1 能力上提供具体基础设施适配 |
-| 组合层 | `x.go` | 仅作为消费方组合基础库，不反向影响 `xlib-standard` |
+| 组合层 | `x.go` | 仅作为消费方组合基础库，不反向影响 `schedulex` |
 
 ## 当前采纳状态口径
 
@@ -36,7 +36,7 @@
 
 ## 变更到同步动作映射
 
-| `xlib-standard` 变更类型 | 必需同步动作 | Evidence |
+| `schedulex` 变更类型 | 必需同步动作 | Evidence |
 | --- | --- | --- |
 | `docs/standard/**` 标准文本、仓库角色、分层或模块边界变更 | 更新下游 README、标准引用、DoD 和边界说明；检查旧名是否只在迁移文档语境出现 | `GOWORK=off make docs-check`，必要时附 `release/standard-impact/latest.md` |
 | `contracts/**`、metrics、health JSON 或 config schema 变更 | 通知所有受影响基础库更新 contract、测试和示例；breaking change 必须进入 release notes | contracts gate、下游 contract 测试、`downstream_release_decision: required` 结论 |
@@ -45,7 +45,7 @@
 | Evidence protocol、release manifest 字段或 artifact 规则变更 | 更新下游 Evidence 生成、校验和发布模板；manifest 字段变化必须标记同步需求 | manifest 校验、checksum、CI artifact |
 | Context Runtime v4.0 profile、registry bridge、`.agent/context/*` 或 `templates/context-consumer/*` 变更 | 同步下游 context profile 入口、legacy alias、registry 引用和运行时证据；profile wrapper/registry bridge 按当前 gate 事实同步，物理 `.agent/context/*` 或 `templates/context-consumer/*` 未落地前不得宣称下游可消费这些文件 | `context_runtime` / `governance_registry` / `repository_rules` / `downstream_context` taxonomy，`governance_runtime` manifest Evidence |
 | 依赖或安全策略变更 | 判断是否影响所有基础库；安全变更默认触发下游同步 | `govulncheck`、secret scan、依赖清单 |
-| 命名、仓库角色或默认下游变更 | 当前主叙事必须使用 `xlib-standard` 和 `kernel`；`corekit` 只用于中性路径 smoke/integration 语境；旧名只能保留在迁移文档语境 | `docs-check` 命名残留断言 |
+| 命名、仓库角色或默认下游变更 | 当前主叙事必须使用 `schedulex` 和 `kernel`；`corekit` 只用于中性路径 smoke/integration 语境；旧名只能保留在迁移文档语境 | `docs-check` 命名残留断言 |
 
 `downstream_release_decision` 的 allowed values 只能是 `required` 或 `not_required`。当标准影响报告判定需要同步下游时使用 `required`，否则使用 `not_required`。
 
@@ -86,9 +86,9 @@ L2 同步优先级低于 `kernel` 和 L1；若 `release/standard-impact/latest.m
 
 ## `x.go` 消费方规则
 
-x.go 仅作为基础库消费方和应用组合层。它可以根据自身需要拉取 `kernel`、L1 或 L2 基础库的新版本，但不得反向要求 `xlib-standard` 引入业务模型、业务 repository、业务消息 schema、生产密钥读取或应用 wiring。
+x.go 仅作为基础库消费方和应用组合层。它可以根据自身需要拉取 `kernel`、L1 或 L2 基础库的新版本，但不得反向要求 `schedulex` 引入业务模型、业务 repository、业务消息 schema、生产密钥读取或应用 wiring。
 
-当 `x.go` 暴露出基础库标准缺口时，应先在 `xlib-standard` 形成标准变更、ADR 或 Issue，再由标准源决定是否触发下游同步。不得把 `x.go` 的临时实现直接复制回 `xlib-standard`。
+当 `x.go` 暴露出基础库标准缺口时，应先在 `schedulex` 形成标准变更、ADR 或 Issue，再由标准源决定是否触发下游同步。不得把 `x.go` 的临时实现直接复制回 `schedulex`。
 
 ## PR 与发布要求
 

@@ -1,8 +1,8 @@
 # Harness Gates
 
-Harness Gate 把 `xlib-standard` 的标准、模板、generator、Evidence 和 release 要求变成可执行检查。
+Harness Gate 把 `schedulex` 的标准、模板、generator、Evidence 和 release 要求变成可执行检查。
 
-Full Goal Runtime v3.1 以 `cmd/goalcli` 作为 Go gate runtime。Makefile target 是推荐的人机入口，内部必须委托到 `GOWORK=off go run ./cmd/goalcli ...`；`scripts/*.sh` 是兼容实现层，不再作为 CI/发布文档中的唯一权威入口。
+Full Goal Runtime v3.1 以 `cmd/schedulex` 作为 Go gate runtime。Makefile target 是推荐的人机入口，内部必须委托到 `GOWORK=off go run ./cmd/schedulex ...`；`scripts/*.sh` 是兼容实现层，不再作为 CI/发布文档中的唯一权威入口。
 
 ## Required Gates
 
@@ -20,7 +20,7 @@ Full Goal Runtime v3.1 以 `cmd/goalcli` 作为 Go gate runtime。Makefile targe
 | Integration | `GOWORK=off make integration` | generator 和 downstream smoke |
 | Dependency Check | `GOWORK=off make dependency-check` | 校验 `renovate.json`、`.github/dependabot.yml` 和 Go dependency inventory |
 | Standard Impact Check | `GOWORK=off make standard-impact-check` | 生成 `release/standard-impact/latest.md` 并判定 `downstream_sync_required`、`downstream_release_decision`（`required` / `not_required`）和 `repository_rules_release_decision`（`audit_required` / `not_required`） |
-| Score | `GOWORK=off make score` / `GOWORK=off go run ./cmd/goalcli score --min 9.8` | 校验 v3.1 gate runtime、CI 和文档契约一致性 |
+| Score | `GOWORK=off make score` / `GOWORK=off go run ./cmd/schedulex score --min 9.8` | 校验 v3.1 gate runtime、CI 和文档契约一致性 |
 | Evidence | `CHECK_STATUS=passed GOWORK=off make evidence` | 生成 release manifest |
 | Release Evidence | `RELEASE_EVIDENCE_REQUIRE_PASSED=1 GOWORK=off make release-evidence-check` | 校验 manifest 与仓库事实 |
 
@@ -41,7 +41,7 @@ Full Goal Runtime v3.1 以 `cmd/goalcli` 作为 Go gate runtime。Makefile targe
 
 ## Context Runtime v4.0 Profile Baseline（REQ-014 当前可执行态）
 
-本节是 `GOAL-20260602-XLIB-RUNTIME-CONSOLIDATION-V4` / `REQ-014` 的冻结守则。当前可执行事实由 `Makefile`、`cmd/goalcli` 和四个 SSOT registry（`.agent/command-registry.yaml`、`.agent/issue-registry.yaml`、`.agent/makefile-baseline.yaml`、`.agent/makefile-target-registry.yaml`）共同证明；profile wrapper 与 registry bridge 已落地为 release gate 的一部分。物理 `.agent/context/*` packs/templates 仍不得被描述为已交付，除非对应文件实际进入仓库并被 registry/evidence 覆盖。
+本节是 `GOAL-20260602-XLIB-RUNTIME-CONSOLIDATION-V4` / `REQ-014` 的冻结守则。当前可执行事实由 `Makefile`、`cmd/schedulex` 和四个 SSOT registry（`.agent/command-registry.yaml`、`.agent/issue-registry.yaml`、`.agent/makefile-baseline.yaml`、`.agent/makefile-target-registry.yaml`）共同证明；profile wrapper 与 registry bridge 已落地为 release gate 的一部分。物理 `.agent/context/*` packs/templates 仍不得被描述为已交付，除非对应文件实际进入仓库并被 registry/evidence 覆盖。
 
 | Profile | 当前组合 | 冻结守则 |
 | --- | --- | --- |
@@ -62,7 +62,7 @@ Full Goal Runtime v3.1 以 `cmd/goalcli` 作为 Go gate runtime。Makefile targe
 
 ## Generator Gate
 
-Generator gate 必须证明模板能生成代表性下游，而不是只证明 `xlib-standard` 自身可用。
+Generator gate 必须证明模板能生成代表性下游，而不是只证明 `schedulex` 自身可用。
 
 代表下游：
 
@@ -75,7 +75,7 @@ Generator gate 必须证明模板能生成代表性下游，而不是只证明 `
 
 - `XLIB_CONTEXT=release_verify GOWORK=off make release-final-check`
 - `XLIB_CONTEXT=release_verify GOWORK=off make release-preflight VERSION=<version>`
-- `GOWORK=off go run ./cmd/goalcli score --min 9.8`
+- `GOWORK=off go run ./cmd/schedulex score --min 9.8`
 - `GOWORK=off make integration DOWNSTREAM=kernel`
 
 ## Secret Gate

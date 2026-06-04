@@ -1,6 +1,6 @@
 # Downstream Compatibility
 
-`xlib-standard` 的下游兼容性必须通过真实生成库 smoke 证明，而不是只证明模板仓库自身可用。
+`schedulex` 的下游兼容性必须通过真实生成库 smoke 证明，而不是只证明模板仓库自身可用。
 
 ## 默认下游
 
@@ -28,7 +28,7 @@
 
 ## Gate
 
-`GOWORK=off make integration` 是默认下游兼容 gate。它通过 `cmd/goalcli integration` 覆盖 generator smoke、`kernel`/`corekit` 代表路径和关键边界检查。
+`GOWORK=off make integration` 是默认下游兼容 gate。它通过 `cmd/schedulex integration` 覆盖 generator smoke、`kernel`/`corekit` 代表路径和关键边界检查。
 
 生成出的每个代表下游必须通过：
 

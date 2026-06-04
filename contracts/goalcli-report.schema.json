@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://xlib-standard.local/contracts/goalcli-report.schema.json",
-  "title": "goalcli report",
+  "$id": "https://schedulex.local/contracts/schedulex-report.schema.json",
+  "title": "schedulex report",
   "type": "object",
   "required": ["command", "status"],
   "properties": {

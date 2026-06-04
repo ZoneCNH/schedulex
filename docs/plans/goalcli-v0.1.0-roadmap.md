@@ -1,13 +1,13 @@
-# goalcli v0.1.0 roadmap
+# schedulex v0.1.0 roadmap
 
-Status: execution roadmap。normative authority 位于 `docs/standard/goalcli-runtime.md` 和 `docs/adr/ADR-20260603-001-goalcli-runtime.md`。
+Status: execution roadmap。normative authority 位于 `docs/standard/schedulex-runtime.md` 和 `docs/adr/ADR-20260603-001-schedulex-runtime.md`。
 
 ## Authority map
 
-- Root proposal: `.worktree/goalcli-v0.1.0-plan.md`。
-- Context brief: `.omx/context/goalcli-v0.1.0-team-20260603T005302Z.md`。
-- Runtime standard: `docs/standard/goalcli-runtime.md`。
-- Runtime ADR: `docs/adr/ADR-20260603-001-goalcli-runtime.md`。
+- Root proposal: `.worktree/schedulex-v0.1.0-plan.md`。
+- Context brief: `.omx/context/schedulex-v0.1.0-team-20260603T005302Z.md`。
+- Runtime standard: `docs/standard/schedulex-runtime.md`。
+- Runtime ADR: `docs/adr/ADR-20260603-001-schedulex-runtime.md`。
 - Source evidence ledger: `.agent/evidence/ledger.jsonl`。
 - 当前完成状态: `mva_status: complete`。
 

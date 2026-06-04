@@ -4,7 +4,7 @@ set -euo pipefail
 required_files=(
   "README.md"
   "docs/standard/README.md"
-  "docs/standard/xlib-standard.md"
+  "docs/standard/schedulex.md"
   "docs/standard/repository-roles.md"
   "docs/standard/layering.md"
   "docs/standard/module-boundary.md"
@@ -18,15 +18,15 @@ required_files=(
   "docs/standard/acceptance-matrix.md"
   "docs/standard/goal-runtime.md"
   "docs/standard/agent-team-contract.md"
-  "docs/standard/goalcli-cli-contract.md"
+  "docs/standard/schedulex-cli-contract.md"
   "docs/standard/template-generation-contract.md"
-  "docs/standard/goalcli-cli-contract.md"
+  "docs/standard/schedulex-cli-contract.md"
   "docs/standard/dod.md"
   "docs/standard/downstream-compatibility.md"
   "docs/downstream-sync-policy.md"
   "docs/scorecard.md"
   ".agent/standard/goal-runtime-canonical.md"
-  ".agent/standard/goalcli-mapping.md"
+  ".agent/standard/schedulex-mapping.md"
   ".agent/standard/audit-2026-06-03.md"
   ".agent/rules/iron-rules.md"
   ".agent/rules/registry.yaml"
@@ -72,7 +72,7 @@ require_text "docs/standard/README.md" "release/manifest/latest.json"
 require_text "docs/standard/README.md" "release/manifest/latest.json.sha256"
 require_text "docs/standard/README.md" "FUZZ_SMOKE_TIME"
 require_text "docs/standard/README.md" "../downstream-sync-policy.md"
-require_text "docs/downstream-sync-policy.md" "xlib-standard"
+require_text "docs/downstream-sync-policy.md" "schedulex"
 require_text "docs/downstream-sync-policy.md" "kernel"
 require_text "docs/downstream-sync-policy.md" "corekit"
 require_text "docs/downstream-sync-policy.md" "L1 基础库"
@@ -112,34 +112,34 @@ require_text "release/manifest/template.json" '"standard_impact"'
 require_text "release/manifest/template.json" '"downstream_sync_required"'
 require_text "release/manifest/template.json" '"generator_evidence"'
 require_text "release/manifest/template.json" '"dependency_check"'
-require_text "docs/scorecard.md" "go run ./cmd/goalcli score --min 9.8"
+require_text "docs/scorecard.md" "go run ./cmd/schedulex score --min 9.8"
 require_text "docs/scorecard.md" "RELEASE_EVIDENCE_MIN_SCORE=9.8"
 require_text "release/manifest/template.json" '"score"'
 require_text "release/manifest/template.json" '"workflow_run_id"'
 require_text "internal/tools/releasemanifest/main.go" "min-score"
-require_text "Makefile" "go run ./cmd/goalcli score --min 9.8"
+require_text "Makefile" "go run ./cmd/schedulex score --min 9.8"
 require_text "Makefile" "RELEASE_EVIDENCE_MIN_SCORE=9.8"
-require_text ".agent/release-template.md" "go run ./cmd/goalcli score --min 9.8"
+require_text ".agent/release-template.md" "go run ./cmd/schedulex score --min 9.8"
 require_text ".agent/retrospective-template.md" "Score"
-require_text ".agent/harness.yaml" "go run ./cmd/goalcli score --min 9.8"
+require_text ".agent/harness.yaml" "go run ./cmd/schedulex score --min 9.8"
 require_text "internal/tools/releasemanifest/main.go" "release/manifest/latest.json.sha256"
-require_text "cmd/goalcli/main.go" "docs-check"
-require_text "cmd/goalcli/main.go" "dependency-check"
-require_text "cmd/goalcli/main.go" "standard-impact-check"
-require_text "cmd/goalcli/main.go" "boundary"
-require_text "cmd/goalcli/main.go" "contracts"
-require_text "cmd/goalcli/main.go" "render-check"
-require_text "cmd/goalcli/main.go" "release-final-check"
-require_text "cmd/goalcli/main.go" "score"
-require_text "cmd/goalcli/main.go" "main-guard"
-require_text "cmd/goalcli/main.go" "worktree-guard"
-require_text "cmd/goalcli/main.go" "issue-registry"
-require_text "cmd/goalcli/main.go" "command-registry"
-require_text "docs/standard/goalcli-cli-contract.md" "goalcli"
-require_text "docs/standard/goalcli-cli-contract.md" "contracts/goalcli-report.schema.json"
-require_text "cmd/goalcli/main.go" "--min"
+require_text "cmd/schedulex/main.go" "docs-check"
+require_text "cmd/schedulex/main.go" "dependency-check"
+require_text "cmd/schedulex/main.go" "standard-impact-check"
+require_text "cmd/schedulex/main.go" "boundary"
+require_text "cmd/schedulex/main.go" "contracts"
+require_text "cmd/schedulex/main.go" "render-check"
+require_text "cmd/schedulex/main.go" "release-final-check"
+require_text "cmd/schedulex/main.go" "score"
+require_text "cmd/schedulex/main.go" "main-guard"
+require_text "cmd/schedulex/main.go" "worktree-guard"
+require_text "cmd/schedulex/main.go" "issue-registry"
+require_text "cmd/schedulex/main.go" "command-registry"
+require_text "docs/standard/schedulex-cli-contract.md" "schedulex"
+require_text "docs/standard/schedulex-cli-contract.md" "contracts/schedulex-report.schema.json"
+require_text "cmd/schedulex/main.go" "--min"
 require_text "Makefile" "GOWORK=off is required for release targets"
-require_text "Makefile" "GOALCLI ?= go run ./cmd/goalcli"
+require_text "Makefile" "GOALCLI ?= go run ./cmd/schedulex"
 require_text "Makefile" '$(GOALCLI) docs-check'
 require_text "Makefile" '$(GOALCLI) dependency-check'
 require_text "Makefile" '$(GOALCLI) standard-impact-check'
@@ -163,10 +163,10 @@ require_text ".github/workflows/ci.yml" "ARTIFACT_URL"
 
 
 # Goal v2.9.3 executable governance contract checks.
-require_text "cmd/goalcli/main.go" "main-guard"
-require_text "cmd/goalcli/main.go" "policy-schema"
-require_text "cmd/goalcli/main.go" "downstream-adoption"
-require_text "cmd/goalcli/main.go" "runtime-file-ownership"
+require_text "cmd/schedulex/main.go" "main-guard"
+require_text "cmd/schedulex/main.go" "policy-schema"
+require_text "cmd/schedulex/main.go" "downstream-adoption"
+require_text "cmd/schedulex/main.go" "runtime-file-ownership"
 require_text "Makefile" "governance-check"
 require_text "Makefile" "p1-governance-check"
 require_text "Makefile" "p2-runtime-check"
@@ -181,9 +181,9 @@ require_text ".agent/makefile-baseline.yaml" "execution-context"
 require_text ".agent/makefile-target-registry.yaml" "execution-context"
 require_text ".agent/harness.yaml" "execution-context"
 require_text ".agent/gates.md" "execution-context"
-require_text "docs/standard/goalcli-cli-contract.md" "不读取真实 secrets"
-require_text "docs/standard/goalcli-cli-contract.md" "downstream-adoption"
-require_text "docs/standard/goalcli-cli-contract.md" "execution-context"
+require_text "docs/standard/schedulex-cli-contract.md" "不读取真实 secrets"
+require_text "docs/standard/schedulex-cli-contract.md" "downstream-adoption"
+require_text "docs/standard/schedulex-cli-contract.md" "execution-context"
 require_text "docs/standard/harness-gates.md" "execution-context"
 require_text "docs/standard/agent-team-contract.md" "leader"
 require_text "docs/standard/goal-runtime.md" "runtime-health"
@@ -191,13 +191,13 @@ require_text "docs/standard/acceptance-matrix.md" "governance-check"
 require_text "docs/standard/downstream-registry.md" "kernel/configx"
 require_text "docs/standard/conformance-profiles.md" "l0-kernel"
 
-xlib_standard_url="https://github.com/ZoneCNH/xlib-standard"
+xlib_standard_url="https://github.com/ZoneCNH/schedulex"
 require_text "README.md" "$xlib_standard_url"
 require_text "docs/standard/README.md" "$xlib_standard_url"
 require_text "docs/spec.md" "$xlib_standard_url"
 require_text "docs/design.md" "$xlib_standard_url"
 require_text "docs/generation.md" "$xlib_standard_url"
-require_text "docs/standard/xlib-standard.md" "$xlib_standard_url"
+require_text "docs/standard/schedulex.md" "$xlib_standard_url"
 require_text "docs/standard/repository-roles.md" "$xlib_standard_url"
 require_text "docs/standard/harness-gates.md" "GOWORK=off make dependency-check"
 require_text "docs/standard/harness-gates.md" "GOWORK=off make standard-impact-check"
@@ -270,8 +270,8 @@ from pathlib import Path
 
 root = Path(sys.argv[1])
 requirements = {
-    "docs/standard/xlib-standard.md": [
-        "xlib-standard",
+    "docs/standard/schedulex.md": [
+        "schedulex",
         "baselib-template",
         "模板",
         "generator",
@@ -279,19 +279,19 @@ requirements = {
         "Evidence",
     ],
     "docs/standard/repository-roles.md": [
-        "xlib-standard",
+        "schedulex",
         "baselib-template",
         "标准权威源",
         "模板、generator、Harness、Evidence 实现仓库",
     ],
     "docs/standard/layering.md": [
-        "xlib-standard",
+        "schedulex",
         "baselib-template",
         "Standard 规则的独立来源",
         "Go 基础库模板中的实现仓库",
     ],
     "docs/standard/module-boundary.md": [
-        "xlib-standard",
+        "schedulex",
         "baselib-template",
         "go.mod",
         "module path",

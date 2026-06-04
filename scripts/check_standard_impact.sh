@@ -29,37 +29,37 @@ canonical_changed_file() {
 
   case "$file" in
     cmd/${retired_gate}/*)
-      printf 'cmd/goalcli/%s\n' "${file#cmd/${retired_gate}/}"
+      printf 'cmd/schedulex/%s\n' "${file#cmd/${retired_gate}/}"
       ;;
     internal/${retired_gate}/*)
-      printf 'internal/goalcli/%s\n' "${file#internal/${retired_gate}/}"
+      printf 'internal/schedulex/%s\n' "${file#internal/${retired_gate}/}"
       ;;
     contracts/${retired_gate}-report.schema.json)
-      printf 'contracts/goalcli-report.schema.json\n'
+      printf 'contracts/schedulex-report.schema.json\n'
       ;;
     .agent/standard/${retired_kit}-${retired_gate}-mapping.md)
-      printf '.agent/standard/goalcli-mapping.md\n'
+      printf '.agent/standard/schedulex-mapping.md\n'
       ;;
     docs/adr/ADR-20260603-001-${retired_kit}-${retired_gate}-runtime.md)
-      printf 'docs/adr/ADR-20260603-001-goalcli-runtime.md\n'
+      printf 'docs/adr/ADR-20260603-001-schedulex-runtime.md\n'
       ;;
     docs/plans/${retired_kit}-v0.1.0-migration-index.md)
-      printf 'docs/plans/goalcli-v0.1.0-migration-index.md\n'
+      printf 'docs/plans/schedulex-v0.1.0-migration-index.md\n'
       ;;
     docs/plans/${retired_kit}-v0.1.0-roadmap.md)
-      printf 'docs/plans/goalcli-v0.1.0-roadmap.md\n'
+      printf 'docs/plans/schedulex-v0.1.0-roadmap.md\n'
       ;;
     docs/standard/${retired_kit}-runtime.md)
-      printf 'docs/standard/goalcli-runtime.md\n'
+      printf 'docs/standard/schedulex-runtime.md\n'
       ;;
     docs/standard/${retired_gate}-cli-contract.md)
-      printf 'docs/standard/goalcli-cli-contract.md\n'
+      printf 'docs/standard/schedulex-cli-contract.md\n'
       ;;
     release/evidence/${retired_kit}/*)
       evidence_file="${file#release/evidence/${retired_kit}/}"
-      evidence_file="${evidence_file//$retired_kit/goalcli}"
+      evidence_file="${evidence_file//$retired_kit/schedulex}"
       evidence_file="${evidence_file//$retired_kit_upper/GOALCLI}"
-      printf 'release/evidence/goalcli/%s\n' "$evidence_file"
+      printf 'release/evidence/schedulex/%s\n' "$evidence_file"
       ;;
     *)
       printf '%s\n' "$file"
@@ -202,7 +202,7 @@ classify_file() {
     AGENTS.md|Makefile|.github/workflows/*|.github/CODEOWNERS|.github/dependabot.yml|.github/rulesets/*|infra/github-rules/*|.agent/gates.md)
       add_category_file "repository_rules" "$file"
       ;;
-    cmd/goalcli/*|.agent/context/*|docs/standard/goalcli-cli-contract.md|docs/standard/release-standard.md|docs/standard/harness-gates.md|docs/standard/evidence-protocol.md)
+    cmd/schedulex/*|.agent/context/*|docs/standard/schedulex-cli-contract.md|docs/standard/release-standard.md|docs/standard/harness-gates.md|docs/standard/evidence-protocol.md)
       add_category_file "context_runtime" "$file"
       ;;
     contracts/*)

@@ -14,78 +14,114 @@ type Trigger interface {
 
 type onceTrigger struct{ at time.Time }
 
-// Once fires exactly once at at.
 func Once(at time.Time) Trigger { return onceTrigger{at: at} }
 
 func (t onceTrigger) Next(after time.Time) (time.Time, bool) {
-	if after.Before(t.at) {
+	if t.at.After(after) || t.at.Equal(after) {
 		return t.at, true
 	}
 	return time.Time{}, false
 }
 
-type everyTrigger struct{ interval time.Duration }
+type intervalTrigger struct{ every time.Duration }
 
-// Every fires repeatedly at interval boundaries after the reference time.
-func Every(interval time.Duration) Trigger { return everyTrigger{interval: interval} }
-
-func (t everyTrigger) Next(after time.Time) (time.Time, bool) {
-	if t.interval <= 0 {
+func Every(d time.Duration) Trigger { return intervalTrigger{every: d} }
+func (t intervalTrigger) Next(after time.Time) (time.Time, bool) {
+	if t.every <= 0 {
 		return time.Time{}, false
 	}
-	return after.Add(t.interval), true
+	return after.Add(t.every), true
 }
 
-type dailyAtTrigger struct {
-	hour int
-	min  int
-	loc  *time.Location
+type dailyTrigger struct {
+	hour, min, sec int
+	loc            *time.Location
 }
 
-// DailyAt fires once per day at hour:minute in loc. loc defaults to UTC.
-func DailyAt(hour, minute int, loc *time.Location) Trigger {
+func DailyAt(hour, min, sec int, loc *time.Location) Trigger {
 	if loc == nil {
 		loc = time.UTC
 	}
-	return dailyAtTrigger{hour: hour, min: minute, loc: loc}
+	return dailyTrigger{hour: hour, min: min, sec: sec, loc: loc}
 }
-
-func (t dailyAtTrigger) Next(after time.Time) (time.Time, bool) {
-	if t.hour < 0 || t.hour > 23 || t.min < 0 || t.min > 59 {
-		return time.Time{}, false
-	}
+func (t dailyTrigger) Next(after time.Time) (time.Time, bool) {
 	local := after.In(t.loc)
-	candidate := time.Date(local.Year(), local.Month(), local.Day(), t.hour, t.min, 0, 0, t.loc)
-	if !candidate.After(local) {
-		candidate = candidate.AddDate(0, 0, 1)
+	n := time.Date(local.Year(), local.Month(), local.Day(), t.hour, t.min, t.sec, 0, t.loc)
+	if !n.After(local) {
+		n = n.AddDate(0, 0, 1)
 	}
-	return candidate, true
+	return n, true
 }
 
-type cronTrigger struct{ interval time.Duration }
+type cronTrigger struct {
+	minuteStep int
+	minute     *int
+	hour       *int
+	loc        *time.Location
+}
 
-// Cron supports the deterministic v0.1 subset: @hourly, @daily, and */N * * * *.
-func Cron(expr string) (Trigger, error) {
-	switch strings.TrimSpace(expr) {
-	case "@hourly":
-		return cronTrigger{interval: time.Hour}, nil
-	case "@daily":
-		return DailyAt(0, 0, time.UTC), nil
+// Cron supports deterministic L1 cron-like expressions with five fields.
+// Supported minute/hour forms: *, */N, and fixed integers. Other fields must be *.
+func Cron(expr string, loc *time.Location) (Trigger, error) {
+	if loc == nil {
+		loc = time.UTC
 	}
-	fields := strings.Fields(expr)
-	if len(fields) == 5 && strings.HasPrefix(fields[0], "*/") && fields[1] == "*" && fields[2] == "*" && fields[3] == "*" && fields[4] == "*" {
-		mins, err := strconv.Atoi(strings.TrimPrefix(fields[0], "*/"))
-		if err != nil || mins <= 0 {
-			return nil, fmt.Errorf("schedulex: invalid cron minute interval %q", fields[0])
+	parts := strings.Fields(expr)
+	if len(parts) != 5 {
+		return nil, fmt.Errorf("schedulex: cron expects 5 fields")
+	}
+	for _, p := range parts[2:] {
+		if p != "*" {
+			return nil, fmt.Errorf("schedulex: only wildcard day/month/week fields supported")
 		}
-		return cronTrigger{interval: time.Duration(mins) * time.Minute}, nil
 	}
-	return nil, fmt.Errorf("schedulex: unsupported cron expression %q", expr)
+	step, minute, err := parseCronField(parts[0], 0, 59)
+	if err != nil {
+		return nil, err
+	}
+	_, hour, err := parseCronField(parts[1], 0, 23)
+	if err != nil {
+		return nil, err
+	}
+	if step == 0 {
+		step = 1
+	}
+	return cronTrigger{minuteStep: step, minute: minute, hour: hour, loc: loc}, nil
+}
+
+func parseCronField(v string, min, max int) (int, *int, error) {
+	if v == "*" {
+		return 1, nil, nil
+	}
+	if strings.HasPrefix(v, "*/") {
+		n, err := strconv.Atoi(strings.TrimPrefix(v, "*/"))
+		if err != nil || n <= 0 || n > max+1 {
+			return 0, nil, fmt.Errorf("schedulex: invalid cron step %q", v)
+		}
+		return n, nil, nil
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n < min || n > max {
+		return 0, nil, fmt.Errorf("schedulex: invalid cron value %q", v)
+	}
+	return 0, &n, nil
 }
 
 func (t cronTrigger) Next(after time.Time) (time.Time, bool) {
-	if t.interval <= 0 {
-		return time.Time{}, false
+	base := after.In(t.loc).Truncate(time.Minute).Add(time.Minute)
+	for i := 0; i < 366*24*60; i++ {
+		c := base.Add(time.Duration(i) * time.Minute)
+		if t.hour != nil && c.Hour() != *t.hour {
+			continue
+		}
+		if t.minute != nil {
+			if c.Minute() != *t.minute {
+				continue
+			}
+		} else if c.Minute()%t.minuteStep != 0 {
+			continue
+		}
+		return c, true
 	}
 	return after.Truncate(t.interval).Add(t.interval), true
 }

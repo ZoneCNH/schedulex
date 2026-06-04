@@ -1,6 +1,6 @@
 # Debt Governance
 
-`goalcli debt` is the release-facing technical debt scanner. It reads `.agent/debt/rules.yaml`, `.agent/debt/rule-registry.yaml`, `.agent/debt/exceptions.yaml`, and `.agent/debt/dependency-purpose.yaml`, then emits deterministic JSON or Markdown evidence.
+`schedulex debt` is the release-facing technical debt scanner. It reads `.agent/debt/rules.yaml`, `.agent/debt/rule-registry.yaml`, `.agent/debt/exceptions.yaml`, and `.agent/debt/dependency-purpose.yaml`, then emits deterministic JSON or Markdown evidence.
 
 Required gates:
 

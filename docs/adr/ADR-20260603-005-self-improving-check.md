@@ -1,4 +1,4 @@
-# ADR-20260603-005 — 新建 `goalcli self-improving-check` enforcer
+# ADR-20260603-005 — 新建 `schedulex self-improving-check` enforcer
 
 ## Status
 
@@ -20,7 +20,7 @@ ADR-004 落地后，registry.yaml 剩 65 条 indexed，其中含唯一一条 P0 
 
 ## Decision
 
-新增 `cmd/goalcli/selfimproving.go` 实现 `goalcli self-improving-check`（别名 `retro-check`），分 4 类静态检查：
+新增 `cmd/schedulex/selfimproving.go` 实现 `schedulex self-improving-check`（别名 `retro-check`），分 4 类静态检查：
 
 1. **必备文件存在**（RULE-RETRO-001）：retrospective.md / template / 3 个 patches.yaml / retro-gate.yaml
 2. **retrospective.md 体现复盘性质**（RULE-RETRO-CHECK-001）：含「复盘/Retrospective/回顾」+「补丁/Patch」+「失败/改进/Root Cause/根因/What」三类关键词，双语容忍
@@ -41,11 +41,11 @@ ADR-004 落地后，registry.yaml 剩 65 条 indexed，其中含唯一一条 P0 
 | 合计 active | 354 (84%) | **363 (87%)** |
 | 仅 indexed | 65 | 56 |
 
-**P0 100% 机器化是里程碑**：仓库所有 P0 规则都至少有一个 goalcli 子命令认领。
+**P0 100% 机器化是里程碑**：仓库所有 P0 规则都至少有一个 schedulex 子命令认领。
 
 ## Test 覆盖
 
-`cmd/goalcli/selfimproving_test.go` 5 个表驱动测试：
+`cmd/schedulex/selfimproving_test.go` 5 个表驱动测试：
 - Lenient_Passes（含全部必备文件 + 0 patches → 通过）
 - Strict_FailsWithoutEntries（strict + 0 patches → exit 1）
 - Strict_PassesWithEntry（strict + 1 PROPOSED entry → 通过）
@@ -71,7 +71,7 @@ ADR-004 落地后，registry.yaml 剩 65 条 indexed，其中含唯一一条 P0 
 
 ## DONE with evidence
 
-- `go test ./cmd/goalcli/ -run SelfImproving -v` → PASS 5/5
+- `go test ./cmd/schedulex/ -run SelfImproving -v` → PASS 5/5
 - `python3 scripts/extract_rules.py` → `419 rules, P0=119, P1=300, active=363`
-- `go run ./cmd/goalcli self-improving-check` → passed
-- `go run ./cmd/goalcli retro-check --strict` → failed (期望，仅说明 0 patches)
+- `go run ./cmd/schedulex self-improving-check` → passed
+- `go run ./cmd/schedulex retro-check --strict` → failed (期望，仅说明 0 patches)

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "goalcli command registry",
+  "title": "schedulex command registry",
   "type": "object",
   "required": ["schema_version", "module", "commands"],
   "properties": {
