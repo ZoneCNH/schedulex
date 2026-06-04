@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+// JitterPolicy configures deterministic per-job jitter.
+type JitterPolicy struct {
+	Max  time.Duration
+	Seed int64
+}
+
 func ApplyDeterministicJitter(base time.Time, p JitterPolicy, jobID string, run int64) time.Time {
 	if p.Max <= 0 {
 		return base

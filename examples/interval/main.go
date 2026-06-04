@@ -9,7 +9,11 @@ import (
 )
 
 func main() {
-	s := schedulex.NewScheduler(schedulex.Options{})
-	_ = s.AddJob(schedulex.Job{ID: "heartbeat", Trigger: schedulex.Every(time.Minute), Run: func(context.Context) error { fmt.Println("tick"); return nil }})
+	s, _ := schedulex.NewScheduler()
+	job := schedulex.JobFunc{NameValue: "heartbeat", RunFunc: func(context.Context) error {
+		fmt.Println("tick")
+		return nil
+	}}
+	_ = s.AddJob(job, schedulex.Every(time.Minute))
 	fmt.Println(s.Snapshot().Version)
 }

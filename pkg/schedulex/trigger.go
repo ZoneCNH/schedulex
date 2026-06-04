@@ -12,12 +12,17 @@ type Trigger interface {
 	Next(after time.Time) (time.Time, bool)
 }
 
+// TriggerOption reserves trigger-level configuration without changing constructors.
+type TriggerOption func(*triggerConfig)
+
+type triggerConfig struct{}
+
 type onceTrigger struct{ at time.Time }
 
 func Once(at time.Time) Trigger { return onceTrigger{at: at} }
 
 func (t onceTrigger) Next(after time.Time) (time.Time, bool) {
-	if t.at.After(after) || t.at.Equal(after) {
+	if t.at.After(after) {
 		return t.at, true
 	}
 	return time.Time{}, false
@@ -25,7 +30,7 @@ func (t onceTrigger) Next(after time.Time) (time.Time, bool) {
 
 type intervalTrigger struct{ every time.Duration }
 
-func Every(d time.Duration) Trigger { return intervalTrigger{every: d} }
+func Every(d time.Duration, _ ...TriggerOption) Trigger { return intervalTrigger{every: d} }
 func (t intervalTrigger) Next(after time.Time) (time.Time, bool) {
 	if t.every <= 0 {
 		return time.Time{}, false
@@ -34,19 +39,22 @@ func (t intervalTrigger) Next(after time.Time) (time.Time, bool) {
 }
 
 type dailyTrigger struct {
-	hour, min, sec int
-	loc            *time.Location
+	hour, minute, sec int
+	loc               *time.Location
 }
 
-func DailyAt(hour, min, sec int, loc *time.Location) Trigger {
+func DailyAt(hour, minute int, loc *time.Location, _ ...TriggerOption) Trigger {
 	if loc == nil {
 		loc = time.UTC
 	}
-	return dailyTrigger{hour: hour, min: min, sec: sec, loc: loc}
+	return dailyTrigger{hour: hour, minute: minute, sec: 0, loc: loc}
 }
 func (t dailyTrigger) Next(after time.Time) (time.Time, bool) {
+	if t.hour < 0 || t.hour > 23 || t.minute < 0 || t.minute > 59 {
+		return time.Time{}, false
+	}
 	local := after.In(t.loc)
-	n := time.Date(local.Year(), local.Month(), local.Day(), t.hour, t.min, t.sec, 0, t.loc)
+	n := time.Date(local.Year(), local.Month(), local.Day(), t.hour, t.minute, t.sec, 0, t.loc)
 	if !n.After(local) {
 		n = n.AddDate(0, 0, 1)
 	}
@@ -55,6 +63,7 @@ func (t dailyTrigger) Next(after time.Time) (time.Time, bool) {
 
 type cronTrigger struct {
 	minuteStep int
+	hourStep   int
 	minute     *int
 	hour       *int
 	loc        *time.Location
@@ -62,7 +71,7 @@ type cronTrigger struct {
 
 // Cron supports deterministic L1 cron-like expressions with five fields.
 // Supported minute/hour forms: *, */N, and fixed integers. Other fields must be *.
-func Cron(expr string, loc *time.Location) (Trigger, error) {
+func Cron(expr string, loc *time.Location, _ ...TriggerOption) (Trigger, error) {
 	if loc == nil {
 		loc = time.UTC
 	}
@@ -79,29 +88,32 @@ func Cron(expr string, loc *time.Location) (Trigger, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, hour, err := parseCronField(parts[1], 0, 23)
+	hourStep, hour, err := parseCronField(parts[1], 0, 23)
 	if err != nil {
 		return nil, err
 	}
 	if step == 0 {
 		step = 1
 	}
-	return cronTrigger{minuteStep: step, minute: minute, hour: hour, loc: loc}, nil
+	if hourStep == 0 {
+		hourStep = 1
+	}
+	return cronTrigger{minuteStep: step, hourStep: hourStep, minute: minute, hour: hour, loc: loc}, nil
 }
 
-func parseCronField(v string, min, max int) (int, *int, error) {
+func parseCronField(v string, floor, ceiling int) (int, *int, error) {
 	if v == "*" {
 		return 1, nil, nil
 	}
 	if strings.HasPrefix(v, "*/") {
 		n, err := strconv.Atoi(strings.TrimPrefix(v, "*/"))
-		if err != nil || n <= 0 || n > max+1 {
+		if err != nil || n <= 0 || n > ceiling+1 {
 			return 0, nil, fmt.Errorf("schedulex: invalid cron step %q", v)
 		}
 		return n, nil, nil
 	}
 	n, err := strconv.Atoi(v)
-	if err != nil || n < min || n > max {
+	if err != nil || n < floor || n > ceiling {
 		return 0, nil, fmt.Errorf("schedulex: invalid cron value %q", v)
 	}
 	return 0, &n, nil
@@ -114,6 +126,9 @@ func (t cronTrigger) Next(after time.Time) (time.Time, bool) {
 		if t.hour != nil && c.Hour() != *t.hour {
 			continue
 		}
+		if t.hour == nil && c.Hour()%t.hourStep != 0 {
+			continue
+		}
 		if t.minute != nil {
 			if c.Minute() != *t.minute {
 				continue
@@ -123,5 +138,5 @@ func (t cronTrigger) Next(after time.Time) (time.Time, bool) {
 		}
 		return c, true
 	}
-	return after.Truncate(t.interval).Add(t.interval), true
+	return time.Time{}, false
 }

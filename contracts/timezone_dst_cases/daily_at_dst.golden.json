@@ -1,0 +1,1 @@
+{"location":"America/New_York","after":"2026-03-08T01:30:00-05:00","trigger":"daily_at_02:30","note":"Go normalizes nonexistent local DST time; contract requires a valid next instant, not wall-clock sleep."}

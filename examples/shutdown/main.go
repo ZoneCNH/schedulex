@@ -9,9 +9,11 @@ import (
 )
 
 func main() {
-	s := schedulex.NewScheduler(schedulex.Options{})
-	_ = s.Start()
+	s, _ := schedulex.NewScheduler()
+	_ = s.Start(context.Background())
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	fmt.Println(s.Shutdown(ctx) == nil && s.Shutdown(ctx) == nil)
+	first := s.Shutdown(ctx)
+	second := s.Shutdown(ctx)
+	fmt.Println(first == nil && second == nil)
 }

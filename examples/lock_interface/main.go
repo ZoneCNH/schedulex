@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/ZoneCNH/schedulex/pkg/schedulex"
 )
@@ -14,7 +15,7 @@ type memLocker struct {
 }
 type lease struct{ l *memLocker }
 
-func (m *memLocker) Lock(context.Context, string) (schedulex.Lease, error) {
+func (m *memLocker) TryLock(context.Context, string, time.Duration) (schedulex.Lease, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.held {
@@ -31,6 +32,6 @@ func (l lease) Release(context.Context) error {
 }
 
 func main() {
-	_, err := (&memLocker{}).Lock(context.Background(), "job")
+	_, err := (&memLocker{}).TryLock(context.Background(), "job", time.Minute)
 	fmt.Println(err == nil)
 }

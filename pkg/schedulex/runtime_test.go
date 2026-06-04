@@ -38,12 +38,23 @@ func TestJitterDeterministic(t *testing.T) {
 func TestSchedulerShutdownIdempotentAndEvents(t *testing.T) {
 	var eventsMu sync.Mutex
 	var events []EventType
-	s := NewScheduler(Options{MaxConcurrent: 1, EventSink: EventSinkFunc(func(e Event) { eventsMu.Lock(); events = append(events, e.Type); eventsMu.Unlock() })})
-	var ran atomic.Int32
-	if err := s.AddJob(Job{ID: "once", Trigger: Once(time.Now().Add(20 * time.Millisecond)), Run: func(context.Context) error { ran.Add(1); return nil }}); err != nil {
+	s, err := NewScheduler(WithMaxConcurrent(1), WithEventSink(EventSinkFunc(func(_ context.Context, e Event) {
+		eventsMu.Lock()
+		events = append(events, e.Type)
+		eventsMu.Unlock()
+	})))
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Start(); err != nil {
+	var ran atomic.Int32
+	job := JobFunc{NameValue: "once", RunFunc: func(context.Context) error {
+		ran.Add(1)
+		return nil
+	}}
+	if err := s.AddJob(job, Once(time.Now().Add(20*time.Millisecond))); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	eventually(t, time.Second, func() bool { return ran.Load() == 1 })
@@ -64,8 +75,11 @@ func TestMaxConcurrencyAndOverlapSkip(t *testing.T) {
 	start := make(chan struct{})
 	finish := make(chan struct{})
 	var active, maxActive atomic.Int32
-	s := NewScheduler(Options{MaxConcurrent: 1})
-	job := func(context.Context) error {
+	s, err := NewScheduler(WithMaxConcurrent(1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	job := JobFunc{NameValue: "j", RunFunc: func(context.Context) error {
 		a := active.Add(1)
 		if a > maxActive.Load() {
 			maxActive.Store(a)
@@ -74,11 +88,11 @@ func TestMaxConcurrencyAndOverlapSkip(t *testing.T) {
 		<-finish
 		active.Add(-1)
 		return nil
-	}
-	if err := s.AddJob(Job{ID: "j", Trigger: Every(time.Millisecond), Overlap: OverlapSkip, Run: job}); err != nil {
+	}}
+	if err := s.AddJob(job, Every(time.Millisecond), WithOverlapPolicy(OverlapSkip)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Start(); err != nil {
+	if err := s.Start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	eventually(t, time.Second, func() bool {
@@ -103,17 +117,17 @@ func TestMaxConcurrencyAndOverlapSkip(t *testing.T) {
 
 func TestLockerInterfaceContract(t *testing.T) {
 	locker := &memoryLocker{held: map[string]bool{}}
-	lease, err := locker.Lock(context.Background(), "k")
+	lease, err := locker.TryLock(context.Background(), "k", time.Minute)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := locker.Lock(context.Background(), "k"); !errors.Is(err, ErrLockUnavailable) {
+	if _, err := locker.TryLock(context.Background(), "k", time.Minute); !errors.Is(err, ErrLockUnavailable) {
 		t.Fatalf("want ErrLockUnavailable, got %v", err)
 	}
 	if err := lease.Release(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := locker.Lock(context.Background(), "k"); err != nil {
+	if _, err := locker.TryLock(context.Background(), "k", time.Minute); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -121,8 +135,11 @@ func TestLockerInterfaceContract(t *testing.T) {
 func TestSchedulerLeakBudget(t *testing.T) {
 	before := runtime.NumGoroutine()
 	for i := 0; i < 5; i++ {
-		s := NewScheduler(Options{})
-		if err := s.Start(); err != nil {
+		s, err := NewScheduler()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := s.Start(context.Background()); err != nil {
 			t.Fatal(err)
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -155,7 +172,7 @@ type memoryLease struct {
 	key string
 }
 
-func (m *memoryLocker) Lock(_ context.Context, key string) (Lease, error) {
+func (m *memoryLocker) TryLock(_ context.Context, key string, _ time.Duration) (Lease, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.held[key] {

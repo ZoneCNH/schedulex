@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["now","running","shutdown","jobs"],"properties":{"now":{"type":"string"},"running":{"type":"boolean"},"shutdown":{"type":"boolean"},"jobs":{"type":"array"}}}

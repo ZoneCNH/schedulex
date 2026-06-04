@@ -17,3 +17,21 @@ const (
 	OverlapQueueOne OverlapPolicy = "queue_one"
 	OverlapAllow    OverlapPolicy = "allow"
 )
+
+func (p MisfirePolicy) valid() bool {
+	switch p {
+	case MisfireSkip, MisfireRunOnce, MisfireCatchUp:
+		return true
+	default:
+		return false
+	}
+}
+
+func (p OverlapPolicy) valid() bool {
+	switch p {
+	case OverlapSkip, OverlapQueueOne, OverlapAllow:
+		return true
+	default:
+		return false
+	}
+}

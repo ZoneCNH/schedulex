@@ -1,1 +1,38 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"schedulex lifecycle event","type":"object","required":["type","job_id","at"],"properties":{"type":{"enum":["scheduled","started","succeeded","failed","skipped"]},"job_id":{"type":"string"},"at":{"type":"string","format":"date-time"},"scheduled_at":{"type":"string","format":"date-time"},"error":{"type":"string"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "schedulex lifecycle event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "at"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "started",
+        "succeeded",
+        "failed",
+        "skipped",
+        "shutdown",
+        "misfire",
+        "lock_skipped",
+        "lock_failed"
+      ]
+    },
+    "job_id": { "type": "string" },
+    "job_name": { "type": "string" },
+    "at": { "type": "string", "format": "date-time" },
+    "scheduled_at": { "type": "string", "format": "date-time" },
+    "started_at": { "type": "string", "format": "date-time" },
+    "finished_at": { "type": "string", "format": "date-time" },
+    "lag": { "type": "integer" },
+    "duration": { "type": "integer" },
+    "attempt": { "type": "integer", "minimum": 0 },
+    "reason": { "type": "string" },
+    "err": { "type": "string" },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

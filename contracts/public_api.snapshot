@@ -1,38 +1,139 @@
-func ApplyDeterministicJitter
-func Cron
-func DailyAt
-func Every
-func NewRealClock
-func NewScheduler
-func Once
-func PlanMisfire
-type Clock
-type Event
-type EventSink
-type EventSinkFunc
-type EventType
-type JitterPolicy
-type Job
-type JobFunc
-type Lease
-type Locker
-type MisfireDecision
-type MisfirePolicy
-type Options
-type OverlapPolicy
-type Scheduler
-type Snapshot
-type Trigger
-value ErrSchedulerClosed
-value EventFailed
-value EventScheduled
-value EventSkipped
-value EventStarted
-value EventSucceeded
-value MisfireCatchUp
-value MisfireRunOnce
-value MisfireSkip
-value OverlapAllow
-value OverlapForbid
-value OverlapSkip
-value Version
+const EventFailed EventType = "failed"
+const EventLockFailed EventType = "lock_failed"
+const EventLockSkipped EventType = "lock_skipped"
+const EventMisfire EventType = "misfire"
+const EventScheduled EventType = "scheduled"
+const EventShutdown EventType = "shutdown"
+const EventSkipped EventType = "skipped"
+const EventStarted EventType = "started"
+const EventSucceeded EventType = "succeeded"
+const MisfireCatchUp MisfirePolicy = "catch_up"
+const MisfireRunOnce MisfirePolicy = "run_once"
+const MisfireSkip MisfirePolicy = "skip"
+const ModuleName = "github.com/ZoneCNH/schedulex"
+const OverlapAllow OverlapPolicy = "allow"
+const OverlapQueueOne OverlapPolicy = "queue_one"
+const OverlapSkip OverlapPolicy = "skip"
+const Version = "v0.1.0"
+func ApplyDeterministicJitter(time.Time, JitterPolicy, string, int64) time.Time
+func Cron(string, *time.Location, ...TriggerOption) (Trigger, error)
+func DailyAt(int, int, *time.Location, ...TriggerOption) Trigger
+func Every(time.Duration, ...TriggerOption) Trigger
+func NewRealClock() Clock
+func NewScheduler(...Option) (*Scheduler, error)
+func NewStaticClock(time.Time) *StaticClock
+func Once(time.Time) Trigger
+func PlanMisfire(MisfirePolicy, []time.Time, time.Time, bool) MisfireDecision
+func ReconcileMisfire(MisfirePolicy, []time.Time) []time.Time
+func SystemClock() Clock
+func WithClock(Clock) Option
+func WithEventSink(EventSink) Option
+func WithJitter(JitterPolicy) JobOption
+func WithJobEventSink(EventSink) JobOption
+func WithLockKey(string) JobOption
+func WithLockTTL(time.Duration) JobOption
+func WithLocker(Locker) JobOption
+func WithMaxConcurrent(int) Option
+func WithMisfirePolicy(MisfirePolicy) JobOption
+func WithOverlapPolicy(OverlapPolicy) JobOption
+method (*Scheduler).AddJob(Job, Trigger, ...JobOption) error
+method (*Scheduler).Shutdown(context.Context) error
+method (*Scheduler).Snapshot() Snapshot
+method (*Scheduler).Start(context.Context) error
+method (*StaticClock).Advance(time.Duration)
+method (*StaticClock).After(time.Duration) <-chan time.Time
+method (*StaticClock).Now() time.Time
+method (*StaticClock).Set(time.Time)
+method (EventSinkFunc).OnEvent(context.Context, Event)
+method (JobFunc).Name() string
+method (JobFunc).Run(context.Context) error
+type Clock interface {
+	Now() time.Time
+	After(time.Duration) <-chan time.Time
+}
+type Event struct {
+	Type EventType `json:"type"`
+	JobID string `json:"job_id,omitempty"`
+	JobName string `json:"job_name,omitempty"`
+	At time.Time `json:"at"`
+	ScheduledAt time.Time `json:"scheduled_at,omitempty"`
+	StartedAt time.Time `json:"started_at,omitempty"`
+	FinishedAt time.Time `json:"finished_at,omitempty"`
+	Lag time.Duration `json:"lag,omitempty"`
+	Duration time.Duration `json:"duration,omitempty"`
+	Attempt int `json:"attempt,omitempty"`
+	Reason string `json:"reason,omitempty"`
+	Err string `json:"err,omitempty"`
+	Attributes map[string]string `json:"attributes,omitempty"`
+}
+type EventSink interface {
+	OnEvent(context.Context, Event)
+}
+type EventSinkFunc func(context.Context, Event)
+type EventType string
+type JitterPolicy struct {
+	Max time.Duration
+	Seed int64
+}
+type Job interface {
+	Name() string
+	Run(context.Context) error
+}
+type JobFunc struct {
+	NameValue string
+	RunFunc func(context.Context) error
+}
+type JobOption func(*<unexported>) error
+type JobSnapshot struct {
+	ID string
+	Name string
+	Next time.Time
+	HasNext bool
+	MisfirePolicy MisfirePolicy
+	OverlapPolicy OverlapPolicy
+	Running bool
+	Queued bool
+}
+type Lease interface {
+	Release(context.Context) error
+}
+type Locker interface {
+	TryLock(context.Context, string, time.Duration) (Lease, error)
+}
+type MisfireDecision struct {
+	Runs []time.Time
+	Skipped []time.Time
+	Next time.Time
+	HasNext bool
+}
+type MisfirePolicy string
+type Option func(*Options) error
+type Options struct {
+	Clock Clock
+	EventSink EventSink
+	MaxConcurrent int
+}
+type OverlapPolicy string
+type Scheduler struct {}
+type Snapshot struct {
+	Version string
+	Now time.Time
+	Started bool
+	Running bool
+	Closed bool
+	Shutdown bool
+	JobCount int
+	Jobs []JobSnapshot
+}
+type StaticClock struct {}
+type Trigger interface {
+	Next(time.Time) (time.Time, bool)
+}
+type TriggerOption func(*<unexported>)
+var ErrInvalidJob = errors.New("schedulex: job name and trigger are required")
+var ErrInvalidOption = errors.New("schedulex: invalid option")
+var ErrJobExists = errors.New("schedulex: job already exists")
+var ErrJobInvalid = ErrInvalidJob
+var ErrLockUnavailable = errors.New("schedulex: lock unavailable")
+var ErrSchedulerClosed = errors.New("schedulex: scheduler closed")
+var ErrSchedulerShutdown = ErrSchedulerClosed
