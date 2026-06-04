@@ -1,28 +1,6 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-echo "checking contracts..."
-
-REQUIRED_FILES=(
-  "contracts/config.schema.json"
-  "contracts/health.schema.json"
-  "contracts/error.schema.json"
-  "contracts/metrics.md"
-  "contracts/goalcli-report.schema.json"
-  "contracts/issue-registry.schema.json"
-  "contracts/command-registry.schema.json"
-  "contracts/execution-context.schema.json"
-  "contracts/conformance-attestation.schema.json"
-  "contracts/policy.schema.json"
-)
-
-for file in "${REQUIRED_FILES[@]}"; do
-  if [[ ! -f "$file" ]]; then
-    echo "ERROR: missing contract file: $file"
-    exit 1
-  fi
+#!/bin/sh
+set -eu
+for f in contracts/public_api.snapshot contracts/trigger_cases/l1_golden.json contracts/trigger_cases/dst_golden.json contracts/misfire_cases/l1_golden.json contracts/lifecycle_event.schema.json contracts/release_manifest.schema.json; do
+  [ -s "$f" ] || { echo "missing contract $f"; exit 1; }
 done
-
-go test ./contracts
-
-echo "contract check passed"
+go test ./contracts ./pkg/schedulex -run 'Contract|Golden|Snapshot|DST'
