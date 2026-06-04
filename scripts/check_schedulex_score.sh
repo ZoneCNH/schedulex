@@ -46,6 +46,34 @@ go test ./pkg/schedulex -run '^TestPublicAPISnapshot$' -count=1
 ./scripts/check_governance.sh p2
 
 score="10.0"
+deductions=0
+
+# 检查 go vet
+if ! GOWORK=off go vet ./... 2>/dev/null; then
+  deductions=$(echo "$deductions + 2.0" | bc)
+fi
+
+# 检查测试通过
+if ! GOWORK=off go test ./... 2>/dev/null; then
+  deductions=$(echo "$deductions + 2.0" | bc)
+fi
+
+# 检查覆盖率（低于 80% 扣分）
+coverage=$(GOWORK=off go test ./pkg/schedulex -coverprofile=/tmp/_score_cover.out 2>/dev/null | grep -oP 'coverage: \K[0-9.]+')
+if [ -n "$coverage" ]; then
+  cov_num=$(echo "$coverage" | sed 's/%//')
+  if (( $(echo "$cov_num < 80" | bc -l) )); then
+    deductions=$(echo "$deductions + 1.0" | bc)
+  fi
+fi
+
+# 检查 race
+if ! GOWORK=off go test -race ./pkg/schedulex 2>/dev/null; then
+  deductions=$(echo "$deductions + 1.0" | bc)
+fi
+
+score=$(echo "10.0 - $deductions" | bc)
+
 awk -v s="$score" -v m="$min" 'BEGIN { exit (s + 0 >= m + 0) ? 0 : 1 }' || {
   echo "ERROR: score=$score below min=$min" >&2
   exit 1

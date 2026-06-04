@@ -133,7 +133,5 @@ type TriggerOption func(*<unexported>)
 var ErrInvalidJob = errors.New("schedulex: job name and trigger are required")
 var ErrInvalidOption = errors.New("schedulex: invalid option")
 var ErrJobExists = errors.New("schedulex: job already exists")
-var ErrJobInvalid = ErrInvalidJob
 var ErrLockUnavailable = errors.New("schedulex: lock unavailable")
 var ErrSchedulerClosed = errors.New("schedulex: scheduler closed")
-var ErrSchedulerShutdown = ErrSchedulerClosed

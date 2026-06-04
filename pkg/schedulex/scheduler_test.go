@@ -35,7 +35,7 @@ func TestShutdownIsIdempotent(t *testing.T) {
 		t.Fatal(err)
 	}
 	job := JobFunc{NameValue: "x", RunFunc: func(context.Context) error { return nil }}
-	if err := s.AddJob(job, Every(time.Second)); !errors.Is(err, ErrSchedulerShutdown) {
+	if err := s.AddJob(job, Every(time.Second)); !errors.Is(err, ErrSchedulerClosed) {
 		t.Fatalf("AddJob after shutdown = %v", err)
 	}
 }

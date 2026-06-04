@@ -16,7 +16,9 @@ type realClock struct{}
 // NewRealClock returns a Clock backed by the Go standard library timer.
 func NewRealClock() Clock { return realClock{} }
 
-// SystemClock returns a Clock backed by the Go standard library timer.
+// SystemClock returns a Clock backed by time.Now and time.After.
+//
+// Deprecated: Use NewRealClock instead.
 func SystemClock() Clock { return NewRealClock() }
 
 func (realClock) Now() time.Time                         { return time.Now() }
