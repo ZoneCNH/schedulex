@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+// waitForScheduled 等待 EventScheduled 并给 goroutine 时间注册 After() waiter。
+// 解决 EventScheduled 在 After() 之前发出导致的竞争条件。
+func waitForScheduled(t *testing.T, events *eventRecorder, jobID string) {
+	t.Helper()
+	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == jobID })
+	time.Sleep(10 * time.Millisecond)
+}
+
 // ────────────────────────────────────────────────────────────────
 // ReconcileMisfire — 0% → 100%
 // ────────────────────────────────────────────────────────────────
@@ -236,7 +244,7 @@ func TestRun_LockSkipped(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "lock-skip" })
+	waitForScheduled(t, events, "lock-skip")
 	clock.Advance(time.Second)
 
 	skipped := events.waitFor(t, EventLockSkipped, func(e Event) bool { return e.JobID == "lock-skip" })
@@ -266,7 +274,7 @@ func TestRun_LockFailed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "lock-fail" })
+	waitForScheduled(t, events, "lock-fail")
 	clock.Advance(time.Second)
 
 	failed := events.waitFor(t, EventLockFailed, func(e Event) bool { return e.JobID == "lock-fail" })
@@ -299,7 +307,7 @@ func TestRun_LockSuccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "lock-ok" })
+	waitForScheduled(t, events, "lock-ok")
 	clock.Advance(time.Second)
 
 	events.waitFor(t, EventSucceeded, func(e Event) bool { return e.JobID == "lock-ok" })
@@ -329,7 +337,7 @@ func TestRun_JobFailed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "fail-job" })
+	waitForScheduled(t, events, "fail-job")
 	clock.Advance(time.Second)
 
 	failed := events.waitFor(t, EventFailed, func(e Event) bool { return e.JobID == "fail-job" })
@@ -364,7 +372,7 @@ func TestRun_LeaseReleaseError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "release-err" })
+	waitForScheduled(t, events, "release-err")
 	clock.Advance(time.Second)
 	events.waitFor(t, EventSucceeded, func(e Event) bool { return e.JobID == "release-err" })
 	if atomic.LoadInt32(&ran) != 1 {
@@ -396,7 +404,7 @@ func TestRun_NilLocker(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "no-lock" })
+	waitForScheduled(t, events, "no-lock")
 	clock.Advance(time.Second)
 	events.waitFor(t, EventSucceeded, func(e Event) bool { return e.JobID == "no-lock" })
 	if atomic.LoadInt32(&ran) != 1 {
@@ -438,7 +446,7 @@ func TestMarkRunStarted_OverlapAllow(t *testing.T) {
 	}
 
 	// 第一次触发
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "allow" })
+	waitForScheduled(t, events, "allow")
 	clock.Advance(time.Second)
 	select {
 	case <-started:
@@ -450,6 +458,7 @@ func TestMarkRunStarted_OverlapAllow(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(e Event) bool {
 		return e.JobID == "allow" && e.ScheduledAt.Equal(start.Add(2*time.Second))
 	})
+	time.Sleep(10 * time.Millisecond)
 	clock.Advance(time.Second)
 	select {
 	case <-started:
@@ -488,7 +497,7 @@ func TestMarkRunStarted_OverlapSkip(t *testing.T) {
 	}
 
 	// 第一次触发
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "skip" })
+	waitForScheduled(t, events, "skip")
 	clock.Advance(time.Second)
 	select {
 	case <-started:
@@ -500,6 +509,7 @@ func TestMarkRunStarted_OverlapSkip(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(e Event) bool {
 		return e.JobID == "skip" && e.ScheduledAt.Equal(start.Add(2*time.Second))
 	})
+	time.Sleep(10 * time.Millisecond)
 	clock.Advance(time.Second)
 	time.Sleep(30 * time.Millisecond)
 
@@ -544,7 +554,7 @@ func TestDispatchQueued_SchedulerClosed(t *testing.T) {
 	}
 
 	// 第一次触发
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "qclosed" })
+	waitForScheduled(t, events, "qclosed")
 	clock.Advance(time.Second)
 	select {
 	case <-started:
@@ -556,6 +566,7 @@ func TestDispatchQueued_SchedulerClosed(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(e Event) bool {
 		return e.JobID == "qclosed" && e.ScheduledAt.Equal(start.Add(2*time.Second))
 	})
+	time.Sleep(10 * time.Millisecond)
 	clock.Advance(time.Second)
 
 	// 关闭 scheduler
@@ -596,7 +607,7 @@ func TestReserveOverlap_QueueOneFull(t *testing.T) {
 	}
 
 	// 第一次触发
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "q1" })
+	waitForScheduled(t, events, "q1")
 	clock.Advance(time.Second)
 	select {
 	case <-started:
@@ -608,6 +619,7 @@ func TestReserveOverlap_QueueOneFull(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(e Event) bool {
 		return e.JobID == "q1" && e.ScheduledAt.Equal(start.Add(2*time.Second))
 	})
+	time.Sleep(10 * time.Millisecond)
 	clock.Advance(time.Second)
 	time.Sleep(30 * time.Millisecond)
 
@@ -615,6 +627,7 @@ func TestReserveOverlap_QueueOneFull(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(e Event) bool {
 		return e.JobID == "q1" && e.ScheduledAt.Equal(start.Add(3*time.Second))
 	})
+	time.Sleep(10 * time.Millisecond)
 	clock.Advance(time.Second)
 	time.Sleep(30 * time.Millisecond)
 
@@ -652,7 +665,7 @@ func TestCollectMissed_CappedAtMax(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "capped" })
+	waitForScheduled(t, events, "capped")
 	clock.Advance(200 * time.Millisecond)
 
 	misfire := events.waitFor(t, EventMisfire, func(e Event) bool { return e.JobID == "capped" })
@@ -831,12 +844,10 @@ func TestAddJob_EmptyLockKey(t *testing.T) {
 }
 
 func TestAddJob_AfterStart(t *testing.T) {
-	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
-	clock := NewStaticClock(start)
-	events := newEventRecorder()
+	// 使用真实时钟避免 StaticClock + goroutine 调度竞争
 	var ran int32
 
-	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(2))
+	s, err := NewScheduler(WithMaxConcurrent(2))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -850,12 +861,10 @@ func TestAddJob_AfterStart(t *testing.T) {
 		atomic.AddInt32(&ran, 1)
 		return nil
 	}}
-	if err := s.AddJob(job, Once(start.Add(time.Second))); err != nil {
+	if err := s.AddJob(job, Once(time.Now().Add(10*time.Millisecond))); err != nil {
 		t.Fatal(err)
 	}
 
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "late-add" })
-	clock.Advance(time.Second)
 	eventually(t, time.Second, func() bool { return atomic.LoadInt32(&ran) == 1 })
 }
 
@@ -1257,7 +1266,7 @@ func TestSnapshot_RunningFlag(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "snap-run" })
+	waitForScheduled(t, events, "snap-run")
 	clock.Advance(time.Second)
 	time.Sleep(20 * time.Millisecond)
 
@@ -1545,7 +1554,7 @@ func TestMultipleJobsConcurrentExecution(t *testing.T) {
 	// 等待所有任务的 scheduled 事件，确保 After() 已注册
 	for i := 0; i < 3; i++ {
 		name := "multi-" + string(rune('a'+i))
-		events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == name })
+		waitForScheduled(t, events, name)
 	}
 	clock.Advance(time.Second)
 	eventually(t, 2*time.Second, func() bool { return completed.Load() == 3 })
@@ -1586,8 +1595,8 @@ func TestSchedulerContinuesAfterJobPanic(t *testing.T) {
 	}
 
 	// 等待两个任务的 scheduled 事件，确保 After() 已注册
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "panicker" })
-	events.waitFor(t, EventScheduled, func(e Event) bool { return e.JobID == "safe" })
+	waitForScheduled(t, events, "panicker")
+	waitForScheduled(t, events, "safe")
 	clock.Advance(time.Second)
 	eventually(t, 2*time.Second, func() bool { return atomic.LoadInt32(&secondRan) == 1 })
 }
