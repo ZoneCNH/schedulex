@@ -12,6 +12,7 @@ downstreams=(
   "github.com/ZoneCNH/postgresx"
   "github.com/ZoneCNH/redisx"
   "github.com/ZoneCNH/kafkax"
+  "github.com/ZoneCNH/natsx"
   "github.com/ZoneCNH/taosx"
   "github.com/ZoneCNH/ossx"
   "github.com/ZoneCNH/clickhousex"

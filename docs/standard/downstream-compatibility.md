@@ -11,7 +11,7 @@
 
 ## 目标库矩阵
 
-详细 module path、package、layer、allowed deps 和 forbidden deps 见 [`../downstream-matrix.md`](../downstream-matrix.md)。矩阵至少覆盖：`kernel`、`configx`、`observex`、`testkitx`、`postgresx`、`redisx`、`kafkax`、`taosx`、`ossx`、`clickhousex`。
+详细 module path、package、layer、allowed deps 和 forbidden deps 见 [`../downstream-matrix.md`](../downstream-matrix.md)。矩阵至少覆盖：`kernel`、`configx`、`observex`、`testkitx`、`postgresx`、`redisx`、`kafkax`、`natsx`、`taosx`、`ossx`、`clickhousex`。
 
 ## 工具要求
 

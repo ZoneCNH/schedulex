@@ -50,4 +50,4 @@ GOWORK=off make release-check
 - Config Library：`configx`。
 - Observability Library：`observex`。
 - Storage Library：`postgresx`、`redisx`、`taosx`、`ossx`、`clickhousex`。
-- Messaging Library：`kafkax`。
+- Messaging Library：`kafkax`、`natsx`。

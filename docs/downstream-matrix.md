@@ -15,6 +15,7 @@
 | `postgresx` | `github.com/ZoneCNH/postgresx` | `postgresx` | L2 | `not_adopted` | `not_run` | release owner 记录未覆盖原因 | `kernel`、`configx`、`observex` | 业务 repository、应用 transaction 编排 |
 | `redisx` | `github.com/ZoneCNH/redisx` | `redisx` | L2 | `not_adopted` | `not_run` | release owner 记录未覆盖原因 | `kernel`、`configx`、`observex` | 业务 key 语义、应用缓存策略 |
 | `kafkax` | `github.com/ZoneCNH/kafkax` | `kafkax` | L2 | `not_adopted` | `not_run` | release owner 记录未覆盖原因 | `kernel`、`configx`、`observex` | 业务 topic 设计、业务消息 schema |
+| `natsx` | `github.com/ZoneCNH/natsx` | `natsx` | L2 | `not_adopted` | `not_run` | release owner 记录未覆盖原因 | `kernel`、`configx`、`observex` | 业务 subject 设计、业务消息 schema |
 | `taosx` | `github.com/ZoneCNH/taosx` | `taosx` | L2 | `not_adopted` | `not_run` | release owner 记录未覆盖原因 | `kernel`、`configx`、`observex` | 业务指标模型、应用时序策略 |
 | `ossx` | `github.com/ZoneCNH/ossx` | `ossx` | L2 | `not_adopted` | `not_run` | release owner 记录未覆盖原因 | `kernel`、`configx`、`observex` | 业务文件生命周期策略 |
 | `clickhousex` | `github.com/ZoneCNH/clickhousex` | `clickhousex` | L2 | `not_adopted` | `not_run` | release owner 记录未覆盖原因 | `kernel`、`configx`、`observex` | 产品报表语义、业务查询模型 |

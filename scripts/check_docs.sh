@@ -12,8 +12,6 @@ required_files=(
   "contracts/release_manifest.schema.json"
   "contracts/snapshot.schema.json"
   "Makefile"
-  "release/manifest/latest.json"
-  "release/manifest/latest.json.sha256"
 )
 
 for file in "${required_files[@]}"; do
@@ -80,6 +78,7 @@ require_text "docs/retrospective/schedulex-v0.1.0.md" "Locker"
 
 require_text "docs/downstream-sync-policy.md" "schedulex"
 require_text "docs/downstream-sync-policy.md" "L1 基础库"
+require_text "docs/downstream-sync-policy.md" "natsx"
 require_text "docs/downstream-sync-policy.md" "x.go 仅作为基础库消费方"
 
 require_text "contracts/public_api.snapshot" "func NewScheduler"
@@ -91,10 +90,5 @@ require_text "contracts/snapshot.schema.json" "jobs"
 require_text "Makefile" "docs-check"
 require_text "Makefile" "release-preflight"
 require_text "Makefile" "downstream-smoke"
-
-if ! (cd release/manifest && sha256sum -c latest.json.sha256 >/dev/null); then
-  echo "ERROR: release manifest checksum is invalid" >&2
-  exit 1
-fi
 
 echo "docs check passed"

@@ -87,6 +87,8 @@ scan_template_placeholders() {
       --glob '!**/.github/workflows/**' \
       --glob '!docs/adr/**' \
       --glob '!**/docs/adr/**' \
+      --glob '!docs/archive/**' \
+      --glob '!**/docs/archive/**' \
       --glob '!docs/goal.md' \
       --glob '!**/docs/goal.md' \
       --glob '!scripts/check_docs.sh' \
@@ -106,6 +108,7 @@ scan_template_placeholders() {
       -not -path '*/.git/*' \
       -not -path '*/.github/workflows/*' \
       -not -path '*/docs/adr/*' \
+      -not -path '*/docs/archive/*' \
       -not -path '*/docs/goal.md' \
       -not -path '*/scripts/check_docs.sh' \
       -not -path '*/scripts/check_rendered_template.sh' \

@@ -7,7 +7,7 @@
 | Standard/Runtime | `schedulex` | 标准文本、参考模板、generator、Harness、Evidence、Goal Runtime | 真实基础设施 runtime、业务语义、生产密钥 |
 | L0 | `kernel` | 通用 runtime primitive：context、error、config、logging、metrics、lifecycle、health | profile runtime、业务模型、`x.go` 反向依赖 |
 | L1 | `configx`、`observex`、`testkitx` | 横向基础能力库 | 应用 wiring、业务策略 |
-| L2 | `postgresx`、`redisx`、`kafkax`、`taosx`、`ossx`、`clickhousex` | profile/基础设施适配器 | 业务 repository、业务消息 schema |
+| L2 | `postgresx`、`redisx`、`kafkax`、`natsx`、`taosx`、`ossx`、`clickhousex` | profile/基础设施适配器 | 业务 repository、业务消息 schema |
 | App/Composition | `x.go` 和业务服务 | 组合基础库、注入配置、读取调用方授权密钥 | 作为基础库依赖前提、把业务规则下沉 |
 
 ## 依赖方向

@@ -14,13 +14,13 @@
 - 提供独立 Go module，可在没有 `x.go` 的情况下构建、测试和发布。
 - 提供稳定公共 API、显式配置、可验证错误模型、健康检查、metrics contract 和 release Evidence。
 - 让新基础库从创建开始就具备 Harness gate、contracts、CI、文档、评审和复盘入口。
-- 用 `kernel`、`configx`、`observex`、`testkitx`、`postgresx`、`redisx`、`kafkax`、`taosx`、`ossx` 和 `clickhousex` 的下游矩阵约束复用边界。
+- 用 `kernel`、`configx`、`observex`、`testkitx`、`postgresx`、`redisx`、`kafkax`、`natsx`、`taosx`、`ossx` 和 `clickhousex` 的下游矩阵约束复用边界。
 
 ## 分层
 
 - Standard：`schedulex`，同时是 Standard 规则的独立来源和 Go 基础库模板中的实现仓库。
 - L0：`kernel` 等语言级、无业务依赖的公共能力。
-- L1：面向具体中间件或基础设施的库，例如 `postgresx`、`redisx`、`kafkax`、`taosx`、`ossx`、`clickhousex`。
+- L1：面向具体中间件或基础设施的库，例如 `postgresx`、`redisx`、`kafkax`、`natsx`、`taosx`、`ossx`、`clickhousex`。
 - L2：组合多个基础能力的技术组件。
 - Business：业务服务，只消费基础库，不向基础库反向注入业务模型。
 

@@ -48,10 +48,10 @@ security: require-gowork-off
 evidence: require-gowork-off
 	./scripts/generate_schedulex_manifest.sh
 
-release-final-check: require-gowork-off
+release-final-check: require-gowork-off evidence
 	./scripts/check_schedulex_release.sh
 
-governance-check: require-gowork-off docs-check contracts
+governance-check: require-gowork-off evidence docs-check contracts
 	./scripts/check_governance.sh all
 
 p1-governance-check: require-gowork-off
@@ -91,7 +91,10 @@ api-check: require-gowork-off
 downstream-smoke: require-gowork-off
 	./scripts/check_downstream_smoke.sh
 
-.PHONY: schedulex-manifest schedulex-check schedulex-checks release-preflight ci ci-extended
+.PHONY: integration schedulex-manifest schedulex-check schedulex-checks release-preflight ci ci-extended
+integration: require-gowork-off
+	./scripts/run_integration.sh
+
 schedulex-manifest: require-gowork-off
 	./scripts/generate_schedulex_manifest.sh
 

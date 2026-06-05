@@ -88,6 +88,7 @@ out_dir="$out_abs"
   cd "$repo_root"
   tar \
     --exclude='./.git' \
+    --exclude='./.omc' \
     --exclude='./.omx' \
     --exclude='./.worktree' \
     --exclude='./.agent/inbox' \
@@ -102,6 +103,8 @@ out_dir="$out_abs"
     --exclude='./profile.cov' \
     --exclude='./release/manifest/latest.json' \
     --exclude='./release/manifest/latest.json.sha256' \
+    --exclude='./release/standard-impact/latest.md' \
+    --exclude='./release/downstream-sync/latest.md' \
     --exclude='./release/debt/latest.json' \
     --exclude='./release/debt/latest.md' \
     --exclude='./release/debt/latest.json.sha256' \
@@ -127,9 +130,13 @@ replace_in_text_files() {
       -name '*.go' -o \
       -name '*.md' -o \
       -name '*.json' -o \
+      -name '*.py' -o \
+      -name '*.snapshot' -o \
+      -name '*.golden' -o \
       -name '*.sh' -o \
       -name '*.yml' -o \
       -name '*.yaml' -o \
+      -name 'CODEOWNERS' -o \
       -name 'Makefile' -o \
       -name 'go.mod' \
     \) -print0
@@ -152,7 +159,15 @@ replace_in_text_files 'schedulex' "$package_name"
 
 (
   cd "$out_dir"
-  gofmt -w ./pkg ./internal ./contracts ./examples ./testkit
+  gofmt_dirs=()
+  for dir in ./pkg ./internal ./contracts ./examples ./test ./testkit; do
+    if [[ -d "$dir" ]]; then
+      gofmt_dirs+=("$dir")
+    fi
+  done
+  if [[ "${#gofmt_dirs[@]}" -gt 0 ]]; then
+    gofmt -w "${gofmt_dirs[@]}"
+  fi
 )
 
 echo "rendered $module_name at $out_dir"

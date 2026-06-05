@@ -52,6 +52,10 @@ standard_target_libraries:
     registry_state: standard_target_declared
     adoption_status: not_adopted
     evidence_state: not_run
+  - name: natsx
+    registry_state: standard_target_declared
+    adoption_status: not_adopted
+    evidence_state: not_run
   - name: taosx
     registry_state: standard_target_declared
     adoption_status: not_adopted

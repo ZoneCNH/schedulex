@@ -13,7 +13,7 @@
 | Generator | `scripts/render_template.sh` / `cmd/schedulex integration` | 把模板渲染为具体基础库 |
 | L0 代表下游 | `kernel` | 第一优先级同步目标，验证最小基础库形态 |
 | L1 基础库 | `configx`、`observex`、`testkitx` | 继承 L0 标准并提供基础能力 |
-| L2 基础库 | `postgresx`、`redisx`、`kafkax`、`taosx`、`ossx`、`clickhousex` | 在 L1 能力上提供具体基础设施适配 |
+| L2 基础库 | `postgresx`、`redisx`、`kafkax`、`natsx`、`taosx`、`ossx`、`clickhousex` | 在 L1 能力上提供具体基础设施适配 |
 | 组合层 | `x.go` | 仅作为消费方组合基础库，不反向影响 `schedulex` |
 
 ## 当前采纳状态口径
@@ -80,7 +80,7 @@ L1 同步不得引入 `x.go` 业务模型、生产密钥路径读取或应用 wi
 
 ## L2 基础库同步规则
 
-L2 基础库包括 `postgresx`、`redisx`、`kafkax`、`taosx`、`ossx` 和 `clickhousex`。L2 只在变更影响具体适配、contracts、release Evidence、security policy 或共享 gate 时同步。
+L2 基础库包括 `postgresx`、`redisx`、`kafkax`、`natsx`、`taosx`、`ossx` 和 `clickhousex`。L2 只在变更影响具体适配、contracts、release Evidence、security policy 或共享 gate 时同步。
 
 L2 同步优先级低于 `kernel` 和 L1；若 `release/standard-impact/latest.md` 未标记 L2 影响，可以只在 release note 中记录无需同步的原因。
 

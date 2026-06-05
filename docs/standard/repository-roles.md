@@ -12,6 +12,7 @@
 | `postgresx` | L2 数据库适配器库 | PostgreSQL profile、连接配置、健康检查、错误分类、测试夹具 | 业务 repository、应用 transaction 编排 |
 | `redisx` | L2 cache 适配器库 | Redis profile、连接、health、metrics、testkit | 业务缓存 key 语义、应用级策略 |
 | `kafkax` | L2 messaging 适配器库 | producer/consumer profile、contract、health、metrics | 业务 topic 设计、业务消息 schema |
+| `natsx` | L2 messaging 适配器库 | JetStream/NATS profile、producer/consumer contract、health、metrics | 业务 subject 设计、业务消息 schema |
 | `taosx` | L2 时序数据适配器库 | TDengine profile、连接、health、contract | 业务指标模型 |
 | `ossx` | L2 object storage 适配器库 | bucket/profile、上传下载 contract、health | 业务文件生命周期策略 |
 | `clickhousex` | L2 分析数据库适配器库 | ClickHouse profile、连接、query contract、health | 产品报表语义 |

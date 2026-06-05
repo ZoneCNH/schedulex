@@ -18,7 +18,7 @@ scripts/render_template.sh \
 - `github.com/ZoneCNH/schedulex` 模板自身 import 到目标 module path。
 - 旧迁移扫描项：`github.com/ZoneCNH/baselib-template`、`baselib-template`、`foundationx`。
 - `pkg/schedulex` 目录名到 `pkg/<package-name>`。
-- README、docs、contracts、examples、scripts 和 manifest 中的模板占位。
+- README、docs、contracts、examples、scripts、Python 验证器、snapshot/golden 文件、CODEOWNERS 和 manifest 中的模板占位。
 
 ## 不变量
 
@@ -37,10 +37,13 @@ Metrics Prefix 必须跟随 package name 替换。模板中的 `schedulex_` pref
 generator 不得复制：
 
 - `.git/`
+- `.omc/`
 - `.omx/`
 - `.worktree/`
 - `release/manifest/latest.json`
 - `release/manifest/latest.json.sha256`
+- `release/standard-impact/latest.md`
+- `release/downstream-sync/latest.md`
 - `docs/adr/`
 - `docs/goal.md`
 - 临时文件、缓存、coverage 输出、构建目录、本地 Evidence 输出和 editor 产物。
@@ -52,6 +55,7 @@ generator 不得复制：
 - `go.mod` module path 正确。
 - 公共包目录和 package name 正确。
 - README、docs、contracts、Makefile、scripts、CI 和 `.agent/` 模板存在。
+- 只对生成结果中实际存在的 Go 目录执行 `gofmt`，不得因某个模板库缺少可选目录而失败。
 - 无 template token 未替换残留。
 - 无 generic placeholder、TODO-style template marker 或 `schedulex_` metrics prefix 残留。
 - 无 `baselib-template` module import 残留，除非在文档中作为来源说明出现。
@@ -68,7 +72,7 @@ generator 不得复制：
 - stale metrics prefix：`schedulex_`。
 - unresolved template token、generic placeholder 和 TODO-style template marker。
 
-扫描 unresolved template token 时，应跳过合法包含表达式语法的 GitHub Actions workflow、检查脚本自身和 Go template probe 脚本，避免把 scanner 规则或 `go list -f` 模板语法误判为未替换占位符。
+扫描 unresolved template token 时，应跳过合法包含表达式语法的 GitHub Actions workflow、历史 ADR/archive 文档、检查脚本自身和 Go template probe 脚本，避免把 scanner 规则或 `go list -f` 模板语法误判为未替换占位符。
 
 扫描失败时 integration gate 必须失败。
 

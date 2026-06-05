@@ -2,6 +2,7 @@
 set -euo pipefail
 
 fixture="release/downstream-adoption/fixture"
+version="${VERSION:-v0.1.0}"
 if grep -R --line-number '^replace ' "$fixture/go.mod"; then
   echo "ERROR: downstream smoke fixture must not use local replace"
   exit 1
@@ -20,5 +21,5 @@ if [[ "${SCHEDULEX_DOWNSTREAM_NETWORK:-0}" == "1" ]]; then
   fi
   printf '%s\n' "$output"
 else
-  echo "downstream smoke: PASS no local replace; network module resolution skipped (set SCHEDULEX_DOWNSTREAM_NETWORK=1 after v0.1.0 is published)"
+  echo "downstream smoke: PASS no local replace; network module resolution skipped (set SCHEDULEX_DOWNSTREAM_NETWORK=1 after ${version} is published)"
 fi

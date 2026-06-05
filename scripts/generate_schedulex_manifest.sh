@@ -62,7 +62,7 @@ cat > "$tmp" <<EOF_JSON
   },
   "dependencies": {
     "allowed": ["go standard library"],
-    "forbidden": ["x.go", "redisx", "postgresx", "kafkax", "taosx", "ossx", "clickhousex", "runtime lock implementations"]
+    "forbidden": ["x.go", "redisx", "postgresx", "kafkax", "natsx", "taosx", "ossx", "clickhousex", "runtime lock implementations"]
   },
   "contracts": {
     "public_api": "contracts/public_api.snapshot",
@@ -138,7 +138,7 @@ cat > "$tmp" <<EOF_JSON
     "release_final": "GOWORK=off make release-final-check"
   },
   "known_gaps": [
-    "full downstream module fetch requires published github.com/ZoneCNH/schedulex v0.1.0"
+    "full downstream module fetch requires published github.com/ZoneCNH/schedulex $version"
   ]
 }
 EOF_JSON

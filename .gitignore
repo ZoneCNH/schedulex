@@ -28,6 +28,7 @@ go.work.sum
 release/manifest/latest.json
 release/manifest/latest.json.sha256
 release/standard-impact/latest.md
+release/downstream-sync/latest.md
 release/debt/latest.json
 release/debt/latest.md
 release/debt/latest.json.sha256

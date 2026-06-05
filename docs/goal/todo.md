@@ -131,7 +131,7 @@ harness
 
 kernel 为 L0，
 configx/observex/testkitx 为 L1，
-postgresx/redisx/kafkax/taosx/ossx 等为 L2，
+postgresx/redisx/kafkax/natsx/taosx/ossx 等为 L2，
 
 
 
