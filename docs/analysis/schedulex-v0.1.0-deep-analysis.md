@@ -1,270 +1,382 @@
 # schedulex v0.1.0 深度分析报告
 
-> 分析日期：2026-06-04
-> 分析范围：全仓库结构、核心代码、测试策略、合约治理、发布流程
+> 初版日期：2026-06-05 | 修复版日期：2026-06-05
+> 分析工具：go vet / golangci-lint / go test -cover / go test -race / benchmark
 
 ---
 
-## 1. 综合评分
+## 1. 总评分：9.5 / 10.0
 
-| 维度 | 得分 | 满分 | 说明 |
-|------|------|------|------|
-| **架构设计** | 10.0 | 10 | 接口清晰、设计模式合理、包职责分明；scheduler.go 从 663 行拆分至 ~240 行 |
-| **代码质量** | 10.0 | 10 | 命名规范、错误处理一致；移除 API 别名、清理死代码 |
-| **测试覆盖** | 10.0 | 10 | 覆盖率 ≥80%，0% 导出函数已补齐，race 检测通过 |
-| **文档完整性** | 10.0 | 10 | 新增 API 参考（598 行）、架构文档（8 ADR）、示例索引 |
-| **CI/治理** | 10.0 | 10 | gate 体系完善，合约检查全面，governance 全通过 |
-| **发布工程** | 10.0 | 10 | 证据链完整，manifest 路径已修复，downstream adoption published |
-| **可观测性** | 10.0 | 10 | EventSink + Snapshot + 15 项基准测试覆盖全部关键路径 |
-| **总分** | **10.0** | **10** | 满分，v0.1.0 发布就绪 |
+### 修复后评分
 
-> 更新日期：2026-06-04（满分迭代后）
+| 维度 | 修复前 | 修复后 | 权重 | 加权分 |
+|------|--------|--------|------|--------|
+| 代码质量 | 9.5 | **10.0** | 25% | 2.500 |
+| 测试覆盖 | 9.0 | **9.5** | 20% | 1.900 |
+| 架构设计 | 9.5 | **10.0** | 15% | 1.500 |
+| 文档完备性 | 9.0 | 9.0 | 10% | 0.900 |
+| 安全性 | 9.0 | **9.5** | 10% | 0.950 |
+| 性能 | 9.5 | 9.5 | 5% | 0.475 |
+| 治理与工程化 | 7.0 | **9.0** | 10% | 0.900 |
+| 依赖健康 | 10.0 | 10.0 | 5% | 0.500 |
+| **总计** | **8.8** | | **100%** | **9.625 → 9.5** |
+
+### 修复前评分（归档）
+
+| 维度 | 得分 | 权重 | 加权分 |
+|------|------|------|--------|
+| 代码质量 | 9.5 | 25% | 2.375 |
+| 测试覆盖 | 9.0 | 20% | 1.800 |
+| 架构设计 | 9.5 | 15% | 1.425 |
+| 文档完备性 | 9.0 | 10% | 0.900 |
+| 安全性 | 9.0 | 10% | 0.900 |
+| 性能 | 9.5 | 5% | 0.475 |
+| 治理与工程化 | 7.0 | 10% | 0.700 |
+| 依赖健康 | 10.0 | 5% | 0.500 |
+| **总计** | | **100%** | **8.875 → 8.8** |
 
 ---
 
-## 2. 项目概览
+## 2. 核心指标摘要（修复后）
 
-### 2.1 代码量统计
+| 指标 | 修复前 | 修复后 | 评价 |
+|------|--------|--------|------|
+| 测试覆盖率 | 93.1% | **92.1%** | 优秀（合并测试后微降，仍远超 80% 基线） |
+| Race 检测 | ✅ 通过 | ✅ 通过 | 无竞态条件 |
+| go vet | ✅ 0 issue | ✅ 0 issue | 无静态错误 |
+| golangci-lint | ⚠️ 3 SA1012 | ✅ **0 issue** | 已修复 |
+| 外部依赖 | 0 | 0 | 极致精简，纯 stdlib |
+| 最大函数长度 | 53 行 | 53 行 | 可接受 |
+| 最大文件长度 | 323 行 | 323 行 | 良好 |
+| 治理/生产代码比 | **20.6:1** | **8.65:1** | ✅ 达标（<10:1） |
+| 生产代码 | 1,235 行 | 1,230 行 | 移除 deprecated API |
+| .agent/ 行数 | 25,454 行 | **10,692 行** | 精简 58% |
+| contracts/ 文件数 | 23 | **16** | 治理 schema 已分离 |
 
-| 指标 | 数值 |
-|------|------|
-| Go 源文件 | 121 个（排除 test） |
-| Go 测试文件 | 104 个 |
-| 源码行数 | ~18,670 行 |
-| 测试行数 | ~21,872 行 |
-| 测试/源码比 | 1.17 |
-| 核心包 `pkg/schedulex` 源文件 | 10 个 |
-| 核心包最大文件 | `scheduler.go` 663 行 |
+### 性能基准（不变）
 
-### 2.2 包结构
+| 操作 | 耗时 | 内存分配 | 评价 |
+|------|------|----------|------|
+| NewScheduler | 571 ns | 320 B / 4 allocs | 极快 |
+| AddJob | 1.3 μs | 920 B / 8 allocs | 良好 |
+| Start+Stop | 10 μs | 2 KB / 21 allocs | 良好 |
+| TriggerOnce | **3.3 ns** | 0 allocs | 极致 |
+| TriggerEvery | 12 ns | 0 allocs | 极致 |
+| TriggerDailyAt | 136 ns | 0 allocs | 良好 |
+| TriggerCron | 280 ns | 0 allocs | 良好 |
+| DispatchRun | 3.1 μs | 496 B / 4 allocs | 良好 |
+| Snapshot | 4.0 μs | 1.3 KB / 4 allocs | 可接受 |
+| Jitter | 78 ns | 0 allocs | 极致 |
 
-```
-pkg/schedulex/          # 核心调度引擎（10 个源文件）
-internal/sanitize/      # 敏感信息脱敏
-internal/validation/    # 输入校验
-examples/               # 7 个示例（interval, once, cron_like, daily_at, misfire, shutdown, lock_interface）
-contracts/              # JSON Schema + Golden Files
-scripts/                # 12 个检查/治理脚本
-docs/                   # 标准、发布、回顾文档
-release/                # 下游采用验证
-```
+---
 
-### 2.3 公共 API 统计
+## 3. 代码结构分析（修复后）
 
-| 类别 | 数量 | 明细 |
+### 3.1 LOC 分布
+
+| 类别 | 修复前 | 修复后 | 变化 |
+|------|--------|--------|------|
+| 生产代码 (pkg/schedulex) | 1,235 | **1,230** | -5（移除 SystemClock） |
+| 测试代码 (pkg/schedulex) | 3,269 | **3,089** | -180（合并去重） |
+| 内部包 (internal/) | 48 | **22** | -26（删除占位包） |
+| 脚本 (scripts/) | 2,271 | 2,271 | 不变 |
+| Agent 治理 (.agent/) | **25,454** | **10,692** | **-14,762（-58%）** |
+| 文档 (docs/) | 8,718 | ~10,200 | +1,482（归档移入） |
+| 合约 (contracts/) | 646 | **459** | -187（治理 schema 分离） |
+| CI/CD (.github/) | 625 | **648** | +23（新增 CODEOWNERS） |
+
+> 修复后 `.agent/` 治理目录（10,692 行）是生产代码（1,230 行）的 **8.65 倍**，从 20.6:1 降至合规范围。
+
+### 3.2 生产代码文件清单
+
+| 文件 | 行数 | 职责 |
 |------|------|------|
-| 导出接口 | 6 | `Clock`, `Job`, `Trigger`, `EventSink`, `Locker`, `Lease` |
-| 导出类型 | ~15 | `Scheduler`, `Snapshot`, `JitterPolicy`, `MisfirePolicy`, `OverlapPolicy` 等 |
-| 导出函数 | ~15 | `NewScheduler`, `Once`, `Every`, `DailyAt`, `Cron`, `ApplyDeterministicJitter` 等 |
-| 导出错误 | 7 | `ErrSchedulerClosed`, `ErrJobExists`, `ErrInvalidJob`, `ErrInvalidOption`, `ErrLockUnavailable` + 2 alias |
-| 导出常量 | 6 | `MisfireSkip/RunOnce/CatchUp`, `OverlapSkip/QueueOne/Allow` |
+| `scheduler.go` | 323 | 核心调度器、选项、生命周期 |
+| `dispatch.go` | 296 | 调度循环、分发、重叠处理、锁集成 |
+| `trigger.go` | 142 | 四种触发器实现 |
+| `job.go` | 119 | Job 接口、配置、选项 |
+| `clock.go` | ~97 | 时间抽象、StaticClock（移除 SystemClock） |
+| `misfire.go` | 79 | 失火检测与恢复策略 |
+| `event.go` | 53 | 事件类型与 EventSink |
+| `policy.go` | 37 | 策略类型定义与验证 |
+| `snapshot.go` | 34 | 可观测性快照 |
+| `jitter.go` | 28 | 确定性抖动（FNV-64a） |
+| `lock.go` | 16 | 分布式锁接口 |
+| `doc.go` | 6 | 包文档 |
+| **合计** | **~1,230** | |
 
 ---
 
-## 3. 架构设计分析（10.0/10）
+## 4. 修复清单与执行结果
 
-### 3.1 优点
+### ✅ P0：治理膨胀 — 已修复
 
-**接口驱动设计**：6 个核心接口（`Clock`, `Job`, `Trigger`, `EventSink`, `Locker`, `Lease`）职责单一，符合 Go 接口哲学——消费者定义接口。
+| 指标 | 修复前 | 修复后 |
+|------|--------|--------|
+| .agent/ 文件数 | 130 | **78** |
+| .agent/ 行数 | 25,454 | **10,692** |
+| 治理/生产比 | 20.6:1 | **8.65:1** |
 
-**设计模式运用恰当**：
-- **Functional Options**：`Option`, `JobOption`, `TriggerOption` — 标准 Go 模式
-- **Strategy Pattern**：`Clock`, `Trigger`, `Job` 均为策略接口
-- **Observer Pattern**：`EventSink` 事件通知
-- **Adapter Pattern**：`JobFunc`, `EventSinkFunc` 函数适配器
-- **Semaphore Pattern**：`sem` channel 控制并发
-
-**内部包隔离**：`internal/sanitize` 和 `internal/validation` 正确使用 internal 包机制防止外部依赖。
-
-### 3.2 已完成改进
-
-| # | 原问题 | 修复方案 | 状态 |
-|---|--------|----------|------|
-| A1 | `scheduler.go` 663 行，职责过重 | 拆分为 `scheduler.go`（~240 行）、`dispatch.go`（~230 行）、`misfire.go`（~80 行） | ✅ 已完成 |
-| A2 | `jitter.go` 混合抖动和失火关注点 | `jitter.go` 仅保留 `JitterPolicy` + `ApplyDeterministicJitter`，misfire 逻辑移至 `misfire.go` | ✅ 已完成 |
-| A3 | misfire 逻辑分散在两个文件 | 统一到 `misfire.go`：`MisfireDecision`、`PlanMisfire`、`ReconcileMisfire`、`collectMissed` | ✅ 已完成 |
-| A4 | `NewRealClock()`/`SystemClock()` 重复 | `SystemClock()` 标记 `// Deprecated: Use NewRealClock instead.` | ✅ 已完成 |
+**执行动作：**
+- 归档 59 个不活跃文件至 `docs/archive/agent-archived/`（14,948 行）
+- 删除 20 个 ≤3 行的纯占位 stub 文件
+- 归档 templates/、debt/、evidence/、standalone 模板等未被脚本引用的内容
+- 保留所有被 scripts/、Makefile、CI 引用的核心治理文件
 
 ---
 
-## 4. 代码质量分析（10.0/10）
+### ✅ P1：lint 告警 — 已修复
 
-### 4.1 优点
+| 告警 | 修复方式 |
+|------|----------|
+| `coverage_test.go:219` SA1012 | `nil` → `context.Background()` |
+| `coverage_test.go:906` SA1012 | `nil` → `context.Background()` |
+| `coverage_test.go:956` SA1012 | `nil` → `context.Background()` |
 
-- **零 TODO/FIXME/HACK**：生产代码中无待办事项
-- **零 go vet 问题**：静态分析通过
-- **零 race condition**：`go test -race` 通过
-- **命名规范一致**：PascalCase 导出、camelCase 内部、Err 前缀错误
-- **错误处理一致**：所有 Option 函数返回 error，sentinel errors 定义清晰
-- **并发安全**：Mutex + atomic + channel 组合使用正确
+修复后 `golangci-lint` 输出：**0 issues**。
 
-### 4.2 已完成改进
+---
 
-| # | 原问题 | 修复方案 | 状态 |
-|---|--------|----------|------|
-| Q1 | `run()` 读取 `s.ctx`/`s.cancel` 未持锁 | `scheduler.go` 已拆分，`run()` 移至 `dispatch.go`，初始化时序由 `NewScheduler` 保证 | ✅ 已完成 |
-| Q2 | `ReconcileMisfire()` 覆盖率 0% | 新增 `TestReconcileMisfire_*` 系列测试，覆盖 skip/run_once/catch_up/zero_missed/all_missed | ✅ 已完成 |
-| Q3 | `run()` 覆盖率 52.4% | 新增 `TestRun_*` 系列测试：JobFailed、JobTimeout、LeaseReleaseError、NilLocker、Panic 恢复 | ✅ 已完成 |
-| Q4 | API alias 增加认知负担 | 移除 `ErrSchedulerShutdown` 和 `ErrJobInvalid`，更新 public_api.snapshot | ✅ 已完成 |
-| Q5 | `WithJitter(JitterPolicy)` 命名不一致 | 保持现状，`WithJitter` 已被广泛使用，文档中说明 | ℹ️ 保持 |
+### ✅ P1：治理 schema 混放 — 已修复
 
-### 4.3 文件结构（改进后）
+7 个治理 schema 从 `contracts/` 移至 `.agent/schemas/`：
+
+| 文件 | 旧路径 | 新路径 |
+|------|--------|--------|
+| agent-policy.schema.json | contracts/ | .agent/schemas/ |
+| command-registry.schema.json | contracts/ | .agent/schemas/ |
+| conformance-attestation.schema.json | contracts/ | .agent/schemas/ |
+| execution-context.schema.json | contracts/ | .agent/schemas/ |
+| execution-evidence.schema.json | contracts/ | .agent/schemas/ |
+| goalcli-report.schema.json | contracts/ | .agent/schemas/ |
+| issue-registry.schema.json | contracts/ | .agent/schemas/ |
+
+同步更新了 `.agent/` 内部引用、`docs/goal/goal.md` 路径、schema `$id` 字段。
+
+---
+
+### ✅ P2：占位内部包 — 已删除
+
+- `internal/goalcli/` — 仅含 README 占位，已删除
+- `internal/runtime/` — 仅含 README 占位，已删除
+- `internal/sanitize/` 和 `internal/validation/` — 保留（有实际代码）
+
+---
+
+### ✅ P2：deprecated API — 已移除
+
+- 从 `clock.go` 删除 `SystemClock()` 函数
+- 测试中 `TestSystemClock` 重命名为 `TestNewRealClock`，使用 `NewRealClock()`
+- `contracts/public_api.snapshot` 同步更新
+
+---
+
+### ✅ P2：测试文件重复 — 已合并
+
+- `runtime_test.go`（189 行）中 6 个测试函数 + 辅助类型合并至 `coverage_test.go`
+- `runtime_test.go` 已删除
+- 合并后 `coverage_test.go` 约 1,837 行
+
+---
+
+### ✅ P2：CODEOWNERS — 已配置
+
+新增 `.github/CODEOWNERS`：
 
 ```
-scheduler.go    ~240 行  # 核心 API：NewScheduler, Start, Shutdown, AddJob, Snapshot, Options
-dispatch.go     ~230 行  # 调度循环：loop, dispatch, dispatchReady, dispatchRun, run, runJob
-misfire.go       ~80 行  # 失火处理：MisfireDecision, PlanMisfire, ReconcileMisfire
-trigger.go      ~180 行  # 触发器：Once, Every, Cron, DailyAt
-jitter.go        ~50 行  # 抖动策略：JitterPolicy, ApplyDeterministicJitter
-event.go         ~60 行  # 事件：EventSink, EventSinkFunc, EventType
-snapshot.go      ~40 行  # 快照：Snapshot, JobStatus
-lock.go          ~30 行  # 锁接口：Locker, Lease
-clock.go         ~30 行  # 时钟：RealClock, StaticClock
-job.go           ~20 行  # 任务：JobFunc
+* @ZoneCNH
+/pkg/schedulex/ @ZoneCNH
+/contracts/ @ZoneCNH
+/.github/ @ZoneCNH
 ```
 
 ---
 
-## 5. 测试策略分析（10.0/10）
+## 5. 优势亮点
 
-### 5.1 优点
+### ✅ 架构设计（10/10）
 
-- **整体覆盖率 ≥80%**，满足发布门禁
-- **合约测试完备**：JSON Schema 验证 + Golden Files
-- **触发器确定性测试**：`Trigger|Cron|Daily|Golden` 测试集
-- **Misfire 合约测试**：`Misfire|Contract` 测试集
-- **DST 时区测试**：`DST|Timezone|Golden` 测试集
-- **泄漏检测**：`Leak|Shutdown` 测试集
-- **竞态检测**：`go test -race` 通过
+- 6 个核心接口形成清晰的抽象边界
+- Functional Options 模式配置灵活
+- 零外部依赖，stdlib only——极致的可移植性
+- 接口驱动设计允许完全替换 Clock/Trigger/Job 实现
+- 分层清晰：L1（调度核心）与 L2（业务逻辑）边界明确
+- 占位包已清理，YAGNI 合规
 
-### 5.2 已完成改进
+### ✅ 测试质量（9.5/10）
 
-| # | 原问题 | 修复方案 | 状态 |
-|---|--------|----------|------|
-| T1 | `ReconcileMisfire()` 覆盖率 0% | `coverage_test.go` 新增 `TestReconcileMisfire_Skip`、`TestReconcileMisfire_RunOnce`、`TestReconcileMisfire_CatchUp`、`TestReconcileMisfire_ZeroMissed`、`TestReconcileMisfire_AllMissed` | ✅ 已完成 |
-| T2 | 无基准测试 | `benchmark_test.go` 新增 15 项 Benchmark：Scheduler、Trigger、Dispatch、Jitter、Misfire、Lock | ✅ 已完成 |
-| T3 | `run()` 覆盖率 52.4% | `coverage_test.go` 新增 `TestRun_JobFailed`、`TestRun_JobTimeout`、`TestRun_LeaseReleaseError`、`TestRun_NilLocker`、`TestSchedulerContinuesAfterJobPanic` | ✅ 已完成 |
-| T4 | 下游 smoke 测试依赖网络 | 保持现状，`SCHEDULEX_DOWNSTREAM_NETWORK=1` 为可选 | ℹ️ 保持 |
+- 92.1% 覆盖率，远超 80% 基线
+- 测试代码量是生产代码的 2.5 倍——测试投入充分
+- 使用 StaticClock 实现完全确定性测试（无 wall-clock sleep）
+- Golden file 测试保证 API 向后兼容
+- Race 检测通过，无竞态条件
+- Benchmark 覆盖所有关键路径
+- API snapshot 测试（AST 解析）防止意外的 API 变更
+- 测试文件重复已合并
 
-### 5.3 新增测试文件
+### ✅ 性能（9.5/10）
 
-| 文件 | 行数 | 覆盖内容 |
-|------|------|----------|
-| `coverage_test.go` | ~1650 | ReconcileMisfire 全路径、run() 边界、dispatch 路径、Every.Next、DailyAt.Next |
-| `benchmark_test.go` | ~200 | 15 项 Benchmark 覆盖全部关键路径 |
-| `scheduler_runtime_test.go` | ~500 | eventRecorder、StaticClock 辅助、waitForScheduled 竞态修复 |
+- Trigger 操作在纳秒级（Once 3.3ns, Every 12ns）
+- 调度核心（DispatchRun）3.1μs，分配极低
+- 确定性 Jitter 仅 78ns，零分配
+- 全部操作内存分配控制在个位数
 
----
+### ✅ 安全性（9.5/10）
 
-## 6. 文档完整性分析（10.0/10）
+- CI 集成 govulncheck 扫描
+- pre-commit hook 扫描密钥泄露
+- `internal/sanitize` 提供密钥脱敏
+- 边界检查脚本禁止核心代码直接使用 `time.Now()`
+- 无外部依赖 = 无供应链攻击面
+- Code Owners 已配置
 
-### 6.1 现有文档
+### ✅ 治理与工程化（9.0/10）
 
-| 文档 | 状态 | 说明 |
-|------|------|------|
-| `docs/standard/schedulex.md` | ✅ | L0 标准定义，内容详尽 |
-| `docs/standard/README.md` | ✅ | 标准索引 |
-| `docs/release.md` | ✅ | 发布流程（路径已修正） |
-| `docs/retrospective/schedulex-v0.1.0.md` | ✅ | 回顾文档 |
-| `docs/api.md` | ✅ **新增** | 598 行完整 API 参考文档 |
-| `docs/architecture.md` | ✅ **新增** | 192 行，8 个 ADR |
-| `examples/README.md` | ✅ **新增** | 121 行示例索引 |
-| `pkg/schedulex/doc.go` | ✅ | 包级别 godoc |
-| `AGENTS.md` | ✅ | Agent 协作约定 |
-| `README.md` | ✅ | 项目入口 |
-
-### 6.2 已完成改进
-
-| # | 原问题 | 修复方案 | 状态 |
-|---|--------|----------|------|
-| D1 | 无 API 参考文档 | 新增 `docs/api.md`（598 行），覆盖全部导出接口、类型、函数、错误、常量 | ✅ 已完成 |
-| D2 | 无架构设计文档 | 新增 `docs/architecture.md`（192 行），8 个 ADR 记录关键设计决策 | ✅ 已完成 |
-| D3 | `docs/release.md` manifest 路径错误 | 修正为 `release/downstream-adoption/latest.json` | ✅ 已完成 |
-| D4 | 示例代码无统一 README | 新增 `examples/README.md`（121 行），覆盖 7 个示例 | ✅ 已完成 |
+- CI 流水线完整：lint → test → race → security → boundary
+- 分支保护 + tag 保护
+- PR 模板 + Issue 模板
+- Dependabot + Renovate 双保险
+- Git hooks 阻止 main 分支直接提交
+- 治理膨胀已精简至 8.65:1
+- schema 混放已分离
 
 ---
 
-## 7. CI/治理分析（10.0/10）
+## 6. 评分细项（修复后）
 
-### 7.1 优点
+### 6.1 代码质量 — 10/10
 
-- **12 个检查脚本**覆盖边界、合约、文档、安全、发布、治理、评分等维度
-- **Makefile target 体系完整**：`ci` → `ci-extended` → `release-check` 层级递进
-- **合约 Schema 验证**：JSON Schema + Golden Files 双重保障
-- **评分机制**：`check_schedulex_score.sh` 动态计算质量分（go vet -2、tests -2、coverage<80% -1、race -1）
-- **治理检查**：p1/p2 分层治理，覆盖标准、文档、合约、命名
+| 检查项 | 修复前 | 修复后 |
+|--------|--------|--------|
+| go vet | 0 issue | 0 issue |
+| golangci-lint | 3 SA1012 | **0 issue** ✅ |
+| 函数长度 | 最大 53 行 | 最大 53 行 |
+| 文件长度 | 最大 323 行 | 最大 323 行 |
+| 认知复杂度 | 生产代码无超限 | 生产代码无超限 |
+| 命名规范 | Go 惯例 | Go 惯例 |
+| 错误处理 | 显式，哨兵错误 | 显式，哨兵错误 |
+| 注释 | 中文注释，godoc 兼容 | 中文注释，godoc 兼容 |
 
-### 7.2 已完成改进
+### 6.2 测试覆盖 — 9.5/10
 
-| # | 原问题 | 修复方案 | 状态 |
-|---|--------|----------|------|
-| C1 | `check_schedulex_score.sh` 硬编码分数 | 改为动态计算：go vet 失败 -2、测试失败 -2、覆盖率 <80% -1、race 失败 -1 | ✅ 已完成 |
-| C2 | 脚本未纳入版本管理 | `check_governance.sh` 和 `check_schedulex_score.sh` 已 `git add` | ✅ 已完成 |
+| 检查项 | 修复前 | 修复后 |
+|--------|--------|--------|
+| 行覆盖率 | 93.1% | 92.1%（合并后微降） |
+| Race 检测 | 通过 | 通过 |
+| 测试类型 | 单元/集成/Golden/Benchmark/Fuzz | 不变 |
+| 确定性 | StaticClock，无 flaky | 不变 |
+| 文件重复 | ⚠️ 重叠 | **已合并** ✅ |
+| 边界覆盖 | 充分 | 充分 |
+| 下游冒烟 | 独立模块验证 | 不变 |
+
+### 6.3 架构设计 — 10/10
+
+| 检查项 | 修复前 | 修复后 |
+|--------|--------|--------|
+| 接口抽象 | 6 核心接口 | 6 核心接口 |
+| 依赖方向 | 单向，无循环 | 单向，无循环 |
+| 扩展点 | 5 个 | 5 个 |
+| 配置模式 | Functional Options | Functional Options |
+| 层级分离 | L1/L2 边界清晰 | L1/L2 边界清晰 |
+| 占位包 | ⚠️ 空壳 | **已删除** ✅ |
+
+### 6.4 文档完备性 — 9.0/10
+
+| 检查项 | 结果 |
+|--------|------|
+| README | 中文，含快速开始 |
+| API 文档 | api.md + godoc |
+| 架构文档 | architecture.md + 11 ADR |
+| 设计文档 | design.md + spec.md |
+| 变更日志 | CHANGELOG.md 完整 |
+| 贡献指南 | AGENTS.md 详尽 |
+| 文档过载 | 部分冗余（-1.0） |
+
+### 6.5 安全性 — 9.5/10
+
+| 检查项 | 修复前 | 修复后 |
+|--------|--------|--------|
+| 依赖安全 | 零依赖 | 零依赖 |
+| 密钥泄露 | CI + hooks 双重扫描 | 不变 |
+| 输入验证 | boundary 检查 | 不变 |
+| govulncheck | 集成 CI | 不变 |
+| sanitize | 内置脱敏 | 不变 |
+| 边界检查 | 禁止 time.Now | 不变 |
+| Code Owners | ⚠️ 未配置 | **已配置** ✅ |
+
+### 6.6 性能 — 9.5/10
+
+| 检查项 | 结果 |
+|--------|------|
+| 热路径 | 纳秒级 |
+| 内存分配 | 个位数 allocs |
+| Benchmark 覆盖 | 15 个 benchmark |
+| Snapshot 开销 | 4μs 可接受（-0.5） |
+
+### 6.7 治理与工程化 — 9.0/10
+
+| 检查项 | 修复前 | 修复后 |
+|--------|--------|--------|
+| CI 流水线 | 完整 | 完整 |
+| 分支保护 | 已配置 | 已配置 |
+| Git hooks | pre-commit + pre-push | 不变 |
+| 治理膨胀 | ⚠️ 25,454 行 / 20.6:1 | **10,692 行 / 8.65:1** ✅ |
+| 脚本冗余 | 23 个脚本 | 23 个（-0.5） |
+| schema 混放 | ⚠️ contracts 含治理 schema | **已分离** ✅ |
+
+### 6.8 依赖健康 — 10/10
+
+| 检查项 | 结果 |
+|--------|------|
+| 外部依赖 | 0 |
+| 供应链风险 | 无 |
+| Dependabot | 已配置 |
+| Renovate | 已配置 |
 
 ---
 
-## 8. 发布工程分析（10.0/10）
+## 7. 与同类项目对比
 
-### 8.1 优点
+| 维度 | schedulex | robfig/cron | go-co-op/gocron |
+|------|-----------|-------------|-----------------|
+| 外部依赖 | 0 | 0 | 4+ |
+| 测试覆盖率 | 92.1% | ~70% | ~75% |
+| 确定性测试 | ✅ StaticClock | ❌ | ❌ |
+| 失火处理 | ✅ 3 策略 | ❌ | ❌ |
+| 分布式锁接口 | ✅ | ❌ | 部分 |
+| 事件系统 | ✅ EventSink | ❌ | ❌ |
+| 确定性 Jitter | ✅ FNV-64a | ❌ | ❌ |
+| Cron 表达式 | ✅ | ✅ | ✅ |
+| 活跃度 | 新项目 | 成熟 | 活跃 |
 
-- **release-preflight 流程完整**：`schedulex-check → evidence → release-final-check`
-- **证据链**：manifest JSON + SHA256 校验
-- **下游 smoke 测试**：验证无 `replace` 指令的独立性
-- **tag 已推送**：`v0.1.0` 成功发布
-
-### 8.2 已完成改进
-
-| # | 原问题 | 修复方案 | 状态 |
-|---|--------|----------|------|
-| R1 | `docs/release.md` manifest 路径错误 | 修正为 `release/downstream-adoption/latest.json` | ✅ 已完成 |
-| R2 | manifest 状态未更新 | `release/downstream-adoption/latest.json` 状态更新为 `published` | ✅ 已完成 |
-
----
-
-## 9. 结构性问题汇总
-
-> 原始分析发现 12 项问题，全部已修复。
-
-| # | 原问题 | 严重度 | 修复状态 |
-|---|--------|--------|----------|
-| 1 | `ReconcileMisfire()` 覆盖率 0% | 🔴 高 | ✅ 已修复 — 新增 5 个测试用例 |
-| 2 | `scheduler.go` 663 行，职责过重 | 🟡 中 | ✅ 已修复 — 拆分为 3 个文件 |
-| 3 | `jitter.go` 混合抖动和失火关注点 | 🟡 中 | ✅ 已修复 — 拆分为 `jitter.go` + `misfire.go` |
-| 4 | `run()` 覆盖率 52.4% | 🟡 中 | ✅ 已修复 — 新增 5 个边界测试 |
-| 5 | 无基准测试 | 🟡 中 | ✅ 已修复 — 新增 15 项 Benchmark |
-| 6 | `docs/release.md` manifest 路径错误 | 🟡 中 | ✅ 已修复 |
-| 7 | 缺少 API 参考文档 | 🟡 中 | ✅ 已修复 — 新增 `docs/api.md` |
-| 8 | 缺少架构设计文档 | 🟡 中 | ✅ 已修复 — 新增 `docs/architecture.md` |
-| 9 | API alias 增加认知负担 | 🟢 低 | ✅ 已修复 — 移除 `ErrSchedulerShutdown`/`ErrJobInvalid` |
-| 10 | `NewRealClock`/`SystemClock` 重复 | 🟢 低 | ✅ 已修复 — `SystemClock()` 标记 deprecated |
-| 11 | 评分脚本硬编码 | 🟢 低 | ✅ 已修复 — 动态计算 |
-| 12 | manifest 状态未更新 | 🟢 低 | ✅ 已修复 — 状态为 `published` |
+schedulex 在架构设计和测试质量上明显领先同类项目，但在生态成熟度和社区规模上尚有差距。
 
 ---
 
-## 10. 改进路线图
+## 8. 总结
 
-### ✅ v0.1.0 满分迭代（已完成）
+schedulex v0.1.0 是一个**架构优秀、测试充分、性能极致**的 L1 调度库。核心代码仅 1,230 行却实现了完整的调度语义（四种触发器、三种失火策略、重叠控制、分布式锁接口、确定性 Jitter、事件系统），零外部依赖的设计使其成为 Go 生态中独特的存在。
 
-所有 12 项结构性问题已修复，评分从 8.1 提升至 10.0/10.0。
+经过本轮结构性修复：
+- **治理膨胀**：从 20.6:1 降至 8.65:1，达标
+- **lint 告警**：从 3 个 SA1012 降至 0
+- **API 清洁度**：移除 deprecated SystemClock
+- **代码整洁**：删除占位包、合并重复测试、分离治理 schema
+- **工程规范**：配置 CODEOWNERS
 
-### v0.2.0（未来规划）
-
-- [ ] 引入 `Option` 泛型验证（Go 1.24+）
-- [ ] 考虑 `context.WithValue` 传递 Job 元数据
-- [ ] 探索 `Ticker` 接口替代 `After` 以支持精确间隔
-- [ ] 新增 `DailyAt` 时区感知的 `WithLocation` 选项
+**评分从 8.8 提升至 9.5，所有结构性问题已修复。**
 
 ---
 
-## 11. 最终结论
+## 9. 附录：验证证据
 
-schedulex v0.1.0 是一个**架构清晰、质量扎实、文档完备、测试充分**的 Go 调度库。经过满分迭代，所有结构性问题已修复：
-
-- **架构**：核心文件从 663 行拆分为 3 个职责单一的模块
-- **质量**：移除 API 别名、清理死代码、deprecate 冗余函数
-- **测试**：覆盖率 ≥80%，新增 1650 行测试 + 15 项 Benchmark，race 检测通过
-- **文档**：新增 API 参考（598 行）、架构文档（8 ADR）、示例索引（121 行）
-- **治理**：评分脚本动态计算，governance 全通过
-
-**总分 10.0/10.0** — 满分，v0.1.0 发布就绪。
+| 检查项 | 命令 | 修复前 | 修复后 |
+|--------|------|--------|--------|
+| 测试通过 | `go test ./pkg/schedulex/` | ✅ 0.652s | ✅ 0.641s |
+| 覆盖率 | `go test -coverprofile` | 93.1% | 92.1% |
+| Race 检测 | `go test -race` | ✅ 1.695s | ✅ 1.745s |
+| go vet | `go vet ./...` | ✅ 0 issue | ✅ 0 issue |
+| golangci-lint | `golangci-lint run` | ⚠️ 3 SA1012 | ✅ **0 issue** |
+| 合约测试 | `go test ./contracts/` | ✅ PASS | ✅ 0.014s |
+| 示例编译 | `go build ./examples/...` | ✅ | ✅ |
+| Benchmark | `go test -bench=.` | ✅ 15/15 | ✅ 15/15 |

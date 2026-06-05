@@ -353,14 +353,13 @@ func NewScheduler(opts ...Option) (*Scheduler, error)
 
 构造调度器。默认使用 `NewRealClock()` 和 `MaxConcurrent=1`。无效选项返回 `ErrInvalidOption`。
 
-### NewRealClock / SystemClock
+### NewRealClock
 
 ```go
 func NewRealClock() Clock
-func SystemClock() Clock
 ```
 
-返回基于 Go 标准库 `time` 包的实时时钟。两者等价。
+返回基于 Go 标准库 `time` 包的实时时钟。
 
 ### NewStaticClock
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/ZoneCNH/schedulex/contracts/execution-evidence.schema.json",
+  "$id": "https://github.com/ZoneCNH/schedulex/.agent/schemas/execution-evidence.schema.json",
   "title": "Execution Evidence",
   "description": "Per-command execution evidence for Goal Runtime tasks. Captures what command ran, where, on which commit, and the SHA-256 of its stdout, enabling tamper-evident reconstruction. Distinct from release-level evidence (release/manifest/latest.json), which aggregates multiple execution evidences.",
   "type": "object",

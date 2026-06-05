@@ -10,7 +10,7 @@
 |---|---|
 | CLI 入口 | 源码入口 `cmd/goalcli`，命令名 `goalcli` |
 | Makefile 变量 | `GOALCLI` |
-| Report schema | `contracts/goalcli-report.schema.json` |
+| Report schema | `.agent/schemas/goalcli-report.schema.json` |
 | Runtime 文档 | `docs/standard/goalcli-runtime.md` |
 | CLI 契约文档 | `docs/standard/goalcli-cli-contract.md` |
 | Evidence pack | `release/evidence/goalcli/` |

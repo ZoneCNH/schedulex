@@ -1,4 +1,11 @@
-# CODEOWNERS 占位文件。
-# 当前仓库尚未绑定具体 GitHub 用户或团队，避免写入虚假 owner。
-# 接入真实维护团队后，在此添加例如：
-# * @org/team
+# 默认所有文件由 @ZoneCNH 负责
+* @ZoneCNH
+
+# 核心调度库
+/pkg/schedulex/ @ZoneCNH
+
+# 合约与 schema
+/contracts/ @ZoneCNH
+
+# CI/CD
+/.github/ @ZoneCNH

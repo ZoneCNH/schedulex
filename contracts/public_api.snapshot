@@ -25,7 +25,6 @@ func NewStaticClock(time.Time) *StaticClock
 func Once(time.Time) Trigger
 func PlanMisfire(MisfirePolicy, []time.Time, time.Time, bool) MisfireDecision
 func ReconcileMisfire(MisfirePolicy, []time.Time) []time.Time
-func SystemClock() Clock
 func WithClock(Clock) Option
 func WithEventSink(EventSink) Option
 func WithJitter(JitterPolicy) JobOption

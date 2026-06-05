@@ -4,11 +4,11 @@ schema_version: "1.1"
 #                        由 internal/tools/releasemanifest 生成，绑定 commit/tree。
 #   execution_evidence -- 单次命令执行的细粒度证据，绑定 stdout SHA-256，
 #                        反作弊（RULE-EVIDENCE-ANTI-FAKE-001/002）。
-#                        Schema: contracts/execution-evidence.schema.json
+#                        Schema: .agent/schemas/execution-evidence.schema.json
 release_evidence:
   required_fields: [commit, tree_sha, workflow_run_id, artifact_url, sha256, gates]
 execution_evidence:
-  schema: contracts/execution-evidence.schema.json
+  schema: .agent/schemas/execution-evidence.schema.json
   required_fields:
     - evidence_id
     - command
