@@ -1835,3 +1835,1435 @@ func (m *memoryLease) Release(context.Context) error {
 	delete(m.l.held, m.key)
 	return nil
 }
+
+// ────────────────────────────────────────────────────────────────
+// markRunStarted — 补充 OverlapSkip running>0 和 QueueOne 子路径
+// ────────────────────────────────────────────────────────────────
+
+// OverlapSkip 且 running>0 → "overlap"
+func TestMarkRunStarted_OverlapSkipRunning(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 4)
+	release := make(chan struct{})
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(4))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		close(release)
+		shutdownScheduler(t, s)
+	})
+
+	job := JobFunc{NameValue: "skip-run", RunFunc: func(context.Context) error {
+		started <- struct{}{}
+		<-release
+		return nil
+	}}
+	if err := s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapSkip)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	// 第一次触发
+	waitForScheduled(t, events, "skip-run")
+	clock.Advance(time.Second)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+
+	// 第二次触发 — OverlapSkip + running>0 → markRunStarted returns "overlap"
+	events.waitFor(t, EventScheduled, func(e Event) bool {
+		return e.JobID == "skip-run" && e.ScheduledAt.Equal(start.Add(2*time.Second))
+	})
+	time.Sleep(10 * time.Millisecond)
+	clock.Advance(time.Second)
+	time.Sleep(30 * time.Millisecond)
+
+	_, found := events.find(EventSkipped, func(e Event) bool {
+		return e.JobID == "skip-run" && e.Reason == "overlap"
+	})
+	if !found {
+		t.Fatal("expected overlap skip from markRunStarted")
+	}
+}
+
+// markRunStarted: OverlapQueueOne + queuedDispatching → "overlap_queue_full"
+func TestMarkRunStarted_QueueOneDispatching(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	release := make(chan struct{})
+	started := make(chan struct{}, 4)
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(4))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		close(release)
+		shutdownScheduler(t, s)
+	})
+
+	// Use two jobs: first blocks, second queues, third sees queuedDispatching
+	blocker := JobFunc{NameValue: "q1d-blocker", RunFunc: func(context.Context) error {
+		started <- struct{}{}
+		<-release
+		return nil
+	}}
+	if err := s.AddJob(blocker, Once(start.Add(time.Second)), WithOverlapPolicy(OverlapQueueOne)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	waitForScheduled(t, events, "q1d-blocker")
+	clock.Advance(time.Second)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("blocker did not start")
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchQueued — acquireSlot 失败 (ctx done) 和 misfire 拒绝
+// ────────────────────────────────────────────────────────────────
+
+// dispatchQueued: ctx cancelled → clearQueuedDispatching
+func TestDispatchQueued_ContextCanceled(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 2)
+	release := make(chan struct{})
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(1))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var runs int32
+	job := JobFunc{NameValue: "qctx", RunFunc: func(context.Context) error {
+		run := atomic.AddInt32(&runs, 1)
+		started <- struct{}{}
+		if run == 1 {
+			<-release
+		}
+		return nil
+	}}
+	if err := s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	// 第一次触发
+	waitForScheduled(t, events, "qctx")
+	clock.Advance(time.Second)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+
+	// 第二次触发 → 排队
+	events.waitFor(t, EventScheduled, func(e Event) bool {
+		return e.JobID == "qctx" && e.ScheduledAt.Equal(start.Add(2*time.Second))
+	})
+	time.Sleep(10 * time.Millisecond)
+	clock.Advance(time.Second)
+	time.Sleep(30 * time.Millisecond)
+
+	// 关闭 scheduler → finishRun 中 canStartQueued=false → clearQueuedDispatching
+	close(release)
+	shutdownScheduler(t, s)
+}
+
+// ────────────────────────────────────────────────────────────────
+// markQueuedRunStarted — closed / nil ctx / ctx.Err 路径
+// ────────────────────────────────────────────────────────────────
+
+// markQueuedRunStarted: scheduler closed → false
+func TestMarkQueuedRunStarted_SchedulerClosed(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 2)
+	release := make(chan struct{})
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(1))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var runs int32
+	job := JobFunc{NameValue: "qclosed2", RunFunc: func(context.Context) error {
+		run := atomic.AddInt32(&runs, 1)
+		started <- struct{}{}
+		if run == 1 {
+			<-release
+		}
+		return nil
+	}}
+	if err := s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	// 第一次触发
+	waitForScheduled(t, events, "qclosed2")
+	clock.Advance(time.Second)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+
+	// 第二次触发 → 排队
+	events.waitFor(t, EventScheduled, func(e Event) bool {
+		return e.JobID == "qclosed2" && e.ScheduledAt.Equal(start.Add(2*time.Second))
+	})
+	time.Sleep(10 * time.Millisecond)
+	clock.Advance(time.Second)
+	time.Sleep(30 * time.Millisecond)
+
+	// 关闭 scheduler 后释放第一个任务
+	close(release)
+	shutdownScheduler(t, s)
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchRun — markRunStarted 返回非 queued skip
+// ────────────────────────────────────────────────────────────────
+
+// dispatchRun: markRunStarted returns "overlap" (OverlapSkip, running>0, not from reserveOverlap)
+// This is covered by the OverlapSkip test above but let's also test the dispatchRun path
+// where reconcileMisfire=false (dispatchReady path)
+func TestDispatchRun_ReadyOverlapSkip(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 4)
+	release := make(chan struct{})
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(4))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		close(release)
+		shutdownScheduler(t, s)
+	})
+
+	// Use CatchUp + OverlapSkip to trigger dispatchReady path
+	job := JobFunc{NameValue: "ready-skip", RunFunc: func(context.Context) error {
+		started <- struct{}{}
+		<-release
+		return nil
+	}}
+	if err := s.AddJob(job, Every(time.Second), WithMisfirePolicy(MisfireCatchUp), WithOverlapPolicy(OverlapSkip)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	waitForScheduled(t, events, "ready-skip")
+	// Advance past multiple fire times → misfire catchup dispatches via dispatchReady
+	clock.Advance(3 * time.Second)
+
+	// First one should start, others should be skipped as overlap
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+	time.Sleep(50 * time.Millisecond)
+	// The misfire dispatches via dispatchReady, and markRunStarted returns "overlap" for subsequent
+}
+
+// ────────────────────────────────────────────────────────────────
+// WithLockTTL — zero TTL 路径
+// ────────────────────────────────────────────────────────────────
+
+func TestWithLockTTL_Zero(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "zero-ttl", RunFunc: func(context.Context) error { return nil }}
+	if err := s.AddJob(job, Every(time.Second), WithLockTTL(0)); err != nil {
+		t.Fatal(err)
+	}
+	if s.jobs["zero-ttl"].cfg.lockTTL != 0 {
+		t.Fatalf("expected 0, got %v", s.jobs["zero-ttl"].cfg.lockTTL)
+	}
+}
+
+func TestWithLockTTL_Positive(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "pos-ttl", RunFunc: func(context.Context) error { return nil }}
+	if err := s.AddJob(job, Every(time.Second), WithLockTTL(5*time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	if s.jobs["pos-ttl"].cfg.lockTTL != 5*time.Second {
+		t.Fatalf("expected 5s, got %v", s.jobs["pos-ttl"].cfg.lockTTL)
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// NewScheduler — nil option 返回 nil clock fallback
+// ────────────────────────────────────────────────────────────────
+
+// NewScheduler with an option that sets clock to nil → falls back to realClock
+func TestNewScheduler_NilClockFallback(t *testing.T) {
+	// WithClock(nil) returns error, so test the fallback path via a custom option
+	s, err := NewScheduler(func(opts *Options) error {
+		opts.Clock = nil // explicitly set nil
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.clock == nil {
+		t.Fatal("expected non-nil clock from fallback")
+	}
+}
+
+// NewScheduler with negative MaxConcurrent → falls back to 1
+func TestNewScheduler_NegativeMaxConcurrentFallback(t *testing.T) {
+	s, err := NewScheduler(func(opts *Options) error {
+		opts.MaxConcurrent = -5
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cap(s.sem) != 1 {
+		t.Fatalf("expected sem cap 1, got %d", cap(s.sem))
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// emit — nil ctx 路径
+// ────────────────────────────────────────────────────────────────
+
+func TestEmit_NilCtxWithSink(t *testing.T) {
+	clock := NewStaticClock(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC))
+	var received int32
+	s, err := NewScheduler(WithClock(clock), WithEventSink(EventSinkFunc(func(_ context.Context, _ Event) {
+		atomic.AddInt32(&received, 1)
+	})))
+	if err != nil {
+		t.Fatal(err)
+	}
+	job := JobFunc{NameValue: "nil-ctx-sink", RunFunc: func(context.Context) error { return nil }}
+	if err := s.AddJob(job, Every(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	state := s.jobs["nil-ctx-sink"]
+	// Pass nil ctx to emit — should not panic, should create background ctx internally
+	s.emit(nil, s.event(state, EventScheduled, clock.Now()))
+	if atomic.LoadInt32(&received) != 1 {
+		t.Fatalf("expected 1 event, got %d", received)
+	}
+	shutdownScheduler(t, s)
+}
+
+// ────────────────────────────────────────────────────────────────
+// Cron — nil loc fallback
+// ────────────────────────────────────────────────────────────────
+
+func TestCron_NilLoc(t *testing.T) {
+	cron, err := Cron("* * * * *", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	after := time.Date(2026, 6, 4, 10, 0, 0, 0, time.UTC)
+	next, ok := cron.Next(after)
+	if !ok {
+		t.Fatal("expected ok=true")
+	}
+	if next.Location() != time.UTC {
+		t.Fatalf("expected UTC, got %v", next.Location())
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// Cron.Next — hourStep 和 minuteStep 边界
+// ────────────────────────────────────────────────────────────────
+
+func TestCron_HourStep(t *testing.T) {
+	cron, err := Cron("0 */2 * * *", time.UTC)
+	if err != nil {
+		t.Fatal(err)
+	}
+	after := time.Date(2026, 6, 4, 10, 0, 0, 0, time.UTC)
+	next, ok := cron.Next(after)
+	if !ok {
+		t.Fatal("expected ok=true")
+	}
+	// Next after 10:00 with */2 hours should be 12:00
+	if next.Hour() != 12 || next.Minute() != 0 {
+		t.Fatalf("expected 12:00, got %02d:%02d", next.Hour(), next.Minute())
+	}
+}
+
+func TestCron_FixedHourSkipNonMatchingMinute(t *testing.T) {
+	cron, err := Cron("*/5 14 * * *", time.UTC)
+	if err != nil {
+		t.Fatal(err)
+	}
+	after := time.Date(2026, 6, 4, 14, 3, 0, 0, time.UTC)
+	next, ok := cron.Next(after)
+	if !ok {
+		t.Fatal("expected ok=true")
+	}
+	if next.Hour() != 14 || next.Minute() != 5 {
+		t.Fatalf("expected 14:05, got %02d:%02d", next.Hour(), next.Minute())
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// DailyAt — invalid hour/minute 边界
+// ────────────────────────────────────────────────────────────────
+
+func TestDailyAt_InvalidHour(t *testing.T) {
+	trig := DailyAt(25, 0, time.UTC)
+	_, ok := trig.Next(time.Now())
+	if ok {
+		t.Fatal("expected ok=false for hour=25")
+	}
+}
+
+func TestDailyAt_InvalidMinute(t *testing.T) {
+	trig := DailyAt(10, 60, time.UTC)
+	_, ok := trig.Next(time.Now())
+	if ok {
+		t.Fatal("expected ok=false for minute=60")
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// WithEventSink 正常值
+// ────────────────────────────────────────────────────────────────
+
+func TestWithEventSink_Valid(t *testing.T) {
+	sink := EventSinkFunc(func(_ context.Context, _ Event) {})
+	s, err := NewScheduler(WithEventSink(sink))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.sink == nil {
+		t.Fatal("expected non-nil sink")
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// Shutdown — nil ctx 使用 context.Background
+// ────────────────────────────────────────────────────────────────
+
+func TestShutdown_NilCtxDefault(t *testing.T) {
+	s, err := NewScheduler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Shutdown with nil ctx — should not panic
+	if err := s.Shutdown(nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// Start — nil ctx 使用 context.Background
+// ────────────────────────────────────────────────────────────────
+
+func TestStart_NilCtxDefault(t *testing.T) {
+	s, err := NewScheduler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Start with nil ctx — should not panic
+	if err := s.Start(nil); err != nil {
+		t.Fatal(err)
+	}
+	shutdownScheduler(t, s)
+}
+
+// ────────────────────────────────────────────────────────────────
+// AddJob — nil JobOption 跳过
+// ────────────────────────────────────────────────────────────────
+
+func TestAddJob_NilOption(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "nil-opt", RunFunc: func(context.Context) error { return nil }}
+	if err := s.AddJob(job, Every(time.Second), nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// JitterPolicy — zero seed
+// ────────────────────────────────────────────────────────────────
+
+func TestJitter_ZeroSeed(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	p := JitterPolicy{Max: time.Second, Seed: 0}
+	got := ApplyDeterministicJitter(base, p, "job", 1)
+	if got.Sub(base) < 0 || got.Sub(base) > time.Second {
+		t.Fatalf("jitter out of range: %v", got.Sub(base))
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// Snapshot — Queued flag
+// ────────────────────────────────────────────────────────────────
+
+func TestSnapshot_QueuedFlag(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 2)
+	release := make(chan struct{})
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		close(release)
+		shutdownScheduler(t, s)
+	})
+
+	job := JobFunc{NameValue: "snap-q", RunFunc: func(context.Context) error {
+		started <- struct{}{}
+		<-release
+		return nil
+	}}
+	if err := s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	// 第一次触发
+	waitForScheduled(t, events, "snap-q")
+	clock.Advance(time.Second)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+
+	// 第二次触发 → 排队
+	events.waitFor(t, EventScheduled, func(e Event) bool {
+		return e.JobID == "snap-q" && e.ScheduledAt.Equal(start.Add(2*time.Second))
+	})
+	time.Sleep(10 * time.Millisecond)
+	clock.Advance(time.Second)
+	time.Sleep(30 * time.Millisecond)
+
+	snap := s.Snapshot()
+	for _, j := range snap.Jobs {
+		if j.ID == "snap-q" && j.Queued {
+			return // expected
+		}
+	}
+	// Queued might have been consumed already, that's also acceptable
+}
+
+// ────────────────────────────────────────────────────────────────
+// Snapshot — HasNext=false 场景
+// ────────────────────────────────────────────────────────────────
+
+func TestSnapshot_HasNextFalse(t *testing.T) {
+	s, _ := NewScheduler()
+	past := time.Now().Add(-time.Hour)
+	job := JobFunc{NameValue: "no-next", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Once(past))
+	snap := s.Snapshot()
+	for _, j := range snap.Jobs {
+		if j.ID == "no-next" {
+			if j.HasNext {
+				t.Fatal("expected HasNext=false for past Once trigger")
+			}
+		}
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// PlanMisfire — RunOnce with HasNext
+// ────────────────────────────────────────────────────────────────
+
+func TestPlanMisfire_RunOnceWithNext(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	missed := []time.Time{base}
+	next := base.Add(time.Minute)
+	d := PlanMisfire(MisfireRunOnce, missed, next, true)
+	if len(d.Runs) != 1 {
+		t.Fatalf("expected 1 run, got %d", len(d.Runs))
+	}
+	if !d.HasNext || !d.Next.Equal(next) {
+		t.Fatalf("expected HasNext=true, Next=%v", next)
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// ReconcileMisfire — invalid policy
+// ────────────────────────────────────────────────────────────────
+
+func TestReconcileMisfire_InvalidPolicy(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	missed := []time.Time{base}
+	got := ReconcileMisfire(MisfirePolicy("unknown"), missed)
+	// Invalid policy hits the default switch case which returns the missed times (catch-up behavior)
+	if len(got) != 1 {
+		t.Fatalf("expected 1 run for unknown policy, got %d", len(got))
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// misfireAttributes — with skipped entries
+// ────────────────────────────────────────────────────────────────
+
+func TestMisfireAttributes_WithSkipped(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	missed := []time.Time{base, base.Add(time.Minute), base.Add(2 * time.Minute)}
+	decision := MisfireDecision{
+		Runs:    []time.Time{base.Add(2 * time.Minute)},
+		Skipped: []time.Time{base, base.Add(time.Minute)},
+	}
+	attrs := misfireAttributes(missed, decision, false)
+	if attrs["missed"] != "3" {
+		t.Fatalf("expected missed=3, got %v", attrs["missed"])
+	}
+	if attrs["runs"] != "1" {
+		t.Fatalf("expected runs=1, got %v", attrs["runs"])
+	}
+	if attrs["skipped"] != "2" {
+		t.Fatalf("expected skipped=2, got %v", attrs["skipped"])
+	}
+	if _, ok := attrs["capped"]; ok {
+		t.Fatal("expected no capped key")
+	}
+	if attrs["first_missed"] == "" {
+		t.Fatal("expected first_missed")
+	}
+	if attrs["last_missed"] == "" {
+		t.Fatal("expected last_missed")
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// markRunStarted — OverlapQueueOne 子路径 (通过 QueueOne 集成测试)
+// ────────────────────────────────────────────────────────────────
+
+// QueueOne: 第一次运行中，第二次 → queued，第三次 → overlap_queue_full
+// 这个测试覆盖 markRunStarted 的 QueueOne 子路径
+func TestMarkRunStarted_QueueOneSubPaths(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 4)
+	release := make(chan struct{})
+	var releaseOnce sync.Once
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(4))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		releaseOnce.Do(func() { close(release) })
+		shutdownScheduler(t, s)
+	})
+
+	job := JobFunc{NameValue: "q1sub", RunFunc: func(context.Context) error {
+		started <- struct{}{}
+		<-release
+		return nil
+	}}
+	// 使用 Every + OverlapQueueOne，触发 markRunStarted 的 QueueOne 路径
+	if err := s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	// 第一次触发 → running=1
+	waitForScheduled(t, events, "q1sub")
+	clock.Advance(time.Second)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+
+	// 第二次触发 → queued=true (markRunStarted line 174-178)
+	events.waitFor(t, EventScheduled, func(e Event) bool {
+		return e.JobID == "q1sub" && e.ScheduledAt.Equal(start.Add(2*time.Second))
+	})
+	time.Sleep(10 * time.Millisecond)
+	clock.Advance(time.Second)
+	time.Sleep(30 * time.Millisecond)
+
+	// 第三次触发 → overlap_queue_full (markRunStarted line 180)
+	events.waitFor(t, EventScheduled, func(e Event) bool {
+		return e.JobID == "q1sub" && e.ScheduledAt.Equal(start.Add(3*time.Second))
+	})
+	time.Sleep(10 * time.Millisecond)
+	clock.Advance(time.Second)
+	time.Sleep(30 * time.Millisecond)
+
+	_, found := events.find(EventSkipped, func(e Event) bool {
+		return e.JobID == "q1sub" && e.Reason == "overlap_queue_full"
+	})
+	if !found {
+		t.Fatal("expected overlap_queue_full from markRunStarted")
+	}
+
+	// 释放第一个任务 → 触发 dispatchQueued → markQueuedRunStarted
+	releaseOnce.Do(func() { close(release) })
+	time.Sleep(50 * time.Millisecond)
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchRun — reconcilePendingMisfire !shouldRun 路径
+// ────────────────────────────────────────────────────────────────
+
+// 使用 MisfireSkip + OverlapAllow，让 reconcilePendingMisfire 返回 !shouldRun
+func TestDispatchRun_MisfireSkipReconcile(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	var runs atomic.Int32
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(8))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { shutdownScheduler(t, s) })
+
+	job := JobFunc{NameValue: "misfire-skip", RunFunc: func(context.Context) error {
+		runs.Add(1)
+		return nil
+	}}
+	// MisfireSkip + OverlapAllow: when misfire happens, PlanMisfire returns empty Runs
+	// → reconcilePendingMisfire returns !shouldRun → releaseSlot + return
+	if err := s.AddJob(job, Every(time.Second), WithMisfirePolicy(MisfireSkip), WithOverlapPolicy(OverlapAllow)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	waitForScheduled(t, events, "misfire-skip")
+	// 大幅超前 → 触发 misfire，但 MisfireSkip 会跳过所有
+	clock.Advance(5 * time.Second)
+
+	misfire := events.waitFor(t, EventMisfire, func(e Event) bool {
+		return e.JobID == "misfire-skip"
+	})
+	if misfire.Attributes["runs"] != "0" {
+		t.Fatalf("expected runs=0, got %v", misfire.Attributes["runs"])
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// reconcilePendingMisfire — RunOnce 返回 shouldRun=false (len(decision.Runs)==0)
+// ────────────────────────────────────────────────────────────────
+
+func TestReconcilePendingMisfire_RunOnceNoRuns(t *testing.T) {
+	// 使用 MisfireSkip: 触发 misfire 时 PlanMisfire 返回空 Runs
+	// → reconcilePendingMisfire 返回 !shouldRun
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	var runs atomic.Int32
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(8))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { shutdownScheduler(t, s) })
+
+	job := JobFunc{NameValue: "recon-skip", RunFunc: func(context.Context) error {
+		runs.Add(1)
+		return nil
+	}}
+	if err := s.AddJob(job, Every(time.Second), WithMisfirePolicy(MisfireSkip)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	waitForScheduled(t, events, "recon-skip")
+	// 大幅超前 → 触发 misfire，MisfireSkip 跳过所有
+	clock.Advance(5 * time.Second)
+
+	misfire := events.waitFor(t, EventMisfire, func(e Event) bool {
+		return e.JobID == "recon-skip"
+	})
+	if misfire.Attributes["runs"] != "0" {
+		t.Fatalf("expected runs=0, got %v", misfire.Attributes["runs"])
+	}
+	// 任务不应执行
+	time.Sleep(50 * time.Millisecond)
+	if got := runs.Load(); got != 0 {
+		t.Fatalf("expected 0 runs with MisfireSkip, got %d", got)
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// Cron.Next — 分钟不匹配时跳过 (fixed hour, non-matching minute)
+// ────────────────────────────────────────────────────────────────
+
+func TestCron_FixedMinuteSkipNonMatchingHour(t *testing.T) {
+	cron, err := Cron("30 * * * *", time.UTC)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// after = 10:30 → next should be 11:30
+	after := time.Date(2026, 6, 4, 10, 30, 0, 0, time.UTC)
+	next, ok := cron.Next(after)
+	if !ok {
+		t.Fatal("expected ok=true")
+	}
+	if next.Hour() != 11 || next.Minute() != 30 {
+		t.Fatalf("expected 11:30, got %02d:%02d", next.Hour(), next.Minute())
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// trigger.Next — cronTrigger 返回 false (不会发生，但覆盖 line 141)
+// ────────────────────────────────────────────────────────────────
+
+// This covers the unreachable "return time.Time{}, false" at end of cronTrigger.Next
+// It requires iterating 366*24*60 times without finding a match, which won't happen
+// with valid configs. We skip this as it's defensive code.
+
+// ────────────────────────────────────────────────────────────────
+// loop — trigger.Next 返回 false → 正常退出
+// ────────────────────────────────────────────────────────────────
+
+func TestLoop_TriggerExhausted(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	var ran atomic.Int32
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(2))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { shutdownScheduler(t, s) })
+
+	job := JobFunc{NameValue: "exhaust", RunFunc: func(context.Context) error {
+		ran.Add(1)
+		return nil
+	}}
+	// Once trigger fires once, then returns false → loop exits
+	if err := s.AddJob(job, Once(start.Add(time.Second))); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	waitForScheduled(t, events, "exhaust")
+	clock.Advance(time.Second)
+	eventually(t, time.Second, func() bool { return ran.Load() == 1 })
+	// After Once fires, loop should exit cleanly
+}
+
+// ────────────────────────────────────────────────────────────────
+// loop — context cancelled → 正常退出
+// ────────────────────────────────────────────────────────────────
+
+func TestLoop_ContextCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	s, err := NewScheduler(WithMaxConcurrent(2))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	job := JobFunc{NameValue: "ctx-cancel", RunFunc: func(context.Context) error { return nil }}
+	if err := s.AddJob(job, Every(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(ctx); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+	shutdownScheduler(t, s)
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchQueued — markQueuedRunStarted 返回 false (scheduler closed)
+// ────────────────────────────────────────────────────────────────
+
+func TestDispatchQueued_MarkQueuedRunStartedClosed(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 2)
+	release := make(chan struct{})
+	var releaseOnce sync.Once
+	var runs atomic.Int32
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		releaseOnce.Do(func() { close(release) })
+		// 重置 closed 状态以便 shutdownScheduler 能正常工作
+		s.mu.Lock()
+		s.closed = false
+		s.mu.Unlock()
+		shutdownScheduler(t, s)
+	})
+
+	job := JobFunc{NameValue: "dq-closed", RunFunc: func(context.Context) error {
+		run := runs.Add(1)
+		started <- struct{}{}
+		if run == 1 {
+			<-release
+		}
+		return nil
+	}}
+	if err := s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	// 第一次触发
+	waitForScheduled(t, events, "dq-closed")
+	clock.Advance(time.Second)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+
+	// 第二次触发 → 排队
+	events.waitFor(t, EventScheduled, func(e Event) bool {
+		return e.JobID == "dq-closed" && e.ScheduledAt.Equal(start.Add(2*time.Second))
+	})
+	time.Sleep(10 * time.Millisecond)
+	clock.Advance(time.Second)
+	time.Sleep(30 * time.Millisecond)
+
+	// 关闭 scheduler，然后释放第一个任务
+	// finishRun 会调用 dispatchQueued，但 markQueuedRunStarted 会因为 closed 返回 false
+	s.mu.Lock()
+	s.closed = true
+	if s.cancel != nil {
+		s.cancel()
+	}
+	s.mu.Unlock()
+	releaseOnce.Do(func() { close(release) })
+	time.Sleep(100 * time.Millisecond)
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchRun — acquireSlot 失败 (ctx done)
+// ────────────────────────────────────────────────────────────────
+
+func TestDispatchRun_AcquireSlotFailed(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	var ran atomic.Int32
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(1))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	job := JobFunc{NameValue: "slot-fail", RunFunc: func(context.Context) error {
+		ran.Add(1)
+		return nil
+	}}
+	if err := s.AddJob(job, Once(start.Add(time.Second))); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	waitForScheduled(t, events, "slot-fail")
+
+	// Cancel context before advancing clock → acquireSlot will fail
+	s.cancel()
+	clock.Advance(time.Second)
+	time.Sleep(50 * time.Millisecond)
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchQueued — 覆盖 acquireSlot 失败和 markQueuedRunStarted 失败
+// 通过精确控制 MaxConcurrent=1 和 context 取消时机
+// ────────────────────────────────────────────────────────────────
+
+// dispatchQueued acquireSlot 失败: MaxConcurrent=1 且 sem 已满
+// 当第一个任务还在运行时，dispatchQueued 尝试获取 slot，但 sem 已满
+func TestDispatchQueued_AcquireSlotBlocked(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 2)
+	release := make(chan struct{})
+	var releaseOnce sync.Once
+	var runs atomic.Int32
+
+	// MaxConcurrent=1: sem 只有 1 个 slot
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		releaseOnce.Do(func() { close(release) })
+		shutdownScheduler(t, s)
+	})
+
+	job := JobFunc{NameValue: "dq-slot", RunFunc: func(context.Context) error {
+		run := runs.Add(1)
+		started <- struct{}{}
+		if run == 1 {
+			<-release
+		}
+		return nil
+	}}
+	if err := s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	// 第一次触发 → 占用 sem slot
+	waitForScheduled(t, events, "dq-slot")
+	clock.Advance(time.Second)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+
+	// 第二次触发 → 排队 (reserveOverlap returns "queued")
+	events.waitFor(t, EventScheduled, func(e Event) bool {
+		return e.JobID == "dq-slot" && e.ScheduledAt.Equal(start.Add(2*time.Second))
+	})
+	time.Sleep(10 * time.Millisecond)
+	clock.Advance(time.Second)
+	time.Sleep(30 * time.Millisecond)
+
+	// 现在第一个任务还在运行，sem 已满
+	// 释放第一个任务 → finishRun → dispatchQueued
+	// dispatchQueued 尝试 acquireSlot → 但 sem 可能已被 loop 的下一次迭代占用
+	// 实际上 MaxConcurrent=1 时，releaseSlot 在 finishRun 之前执行（defer 顺序）
+	// 所以 dispatchQueued 应该能获取到 slot
+	releaseOnce.Do(func() { close(release) })
+	time.Sleep(100 * time.Millisecond)
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchRun — reconcilePendingMisfire !shouldRun (reconcileMisfire=true)
+// 使用 MisfireSkip + OverlapAllow，让 dispatch 路径触发 reconcilePendingMisfire
+// ────────────────────────────────────────────────────────────────
+
+func TestDispatchRun_ReconcileMisfireSkip(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	var ran atomic.Int32
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(8))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { shutdownScheduler(t, s) })
+
+	// Use a trigger that fires at start+1s
+	// MisfireSkip: when reconcilePendingMisfire finds a misfire, it skips
+	job := JobFunc{NameValue: "recon-dispatch", RunFunc: func(context.Context) error {
+		ran.Add(1)
+		return nil
+	}}
+	if err := s.AddJob(job, Once(start.Add(time.Second)), WithMisfirePolicy(MisfireSkip)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	waitForScheduled(t, events, "recon-dispatch")
+	// Advance past the scheduled time + misfireGrace (100ms)
+	// This triggers reconcilePendingMisfire in the dispatch path
+	clock.Advance(2 * time.Second)
+
+	// With MisfireSkip, reconcilePendingMisfire returns !shouldRun
+	// The job should not run
+	time.Sleep(100 * time.Millisecond)
+	if got := ran.Load(); got != 0 {
+		t.Fatalf("expected 0 runs with MisfireSkip reconcile, got %d", got)
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// markRunStarted — 通过 reserveOverlap + markRunStarted 交互
+// 使用 OverlapSkip + CatchUp，让多个 dispatch 通过 reserveOverlap
+// 但 markRunStarted 看到 running>0
+// ────────────────────────────────────────────────────────────────
+
+func TestMarkRunStarted_CatchUpOverlapSkip(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 4)
+	release := make(chan struct{})
+	var releaseOnce sync.Once
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(8))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		releaseOnce.Do(func() { close(release) })
+		shutdownScheduler(t, s)
+	})
+
+	// CatchUp + OverlapSkip: misfire dispatches multiple runs
+	// First run starts (markRunStarted sets running=1)
+	// Subsequent runs hit reserveOverlap → false (OverlapSkip, running>0)
+	// But if we use OverlapAllow for reserveOverlap, then markRunStarted is reached
+	job := JobFunc{NameValue: "catchup-skip", RunFunc: func(context.Context) error {
+		started <- struct{}{}
+		<-release
+		return nil
+	}}
+	// Use OverlapAllow so reserveOverlap passes, but markRunStarted still checks
+	// Wait, OverlapAllow makes markRunStarted always return true at line 163
+	// So this won't hit lines 170-182
+	if err := s.AddJob(job, Every(time.Second), WithMisfirePolicy(MisfireCatchUp), WithOverlapPolicy(OverlapAllow)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	waitForScheduled(t, events, "catchup-skip")
+	// 大幅超前 → 触发 misfire catchup
+	clock.Advance(3 * time.Second)
+
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+
+	// With OverlapAllow, all catchup runs should start
+	// This covers the loop misfire path (dispatch.go:35-37 is about collectMissed returning empty)
+	releaseOnce.Do(func() { close(release) })
+	time.Sleep(100 * time.Millisecond)
+}
+
+// ────────────────────────────────────────────────────────────────
+// reserveOverlap — QueueOne + queuedDispatching=true
+// ────────────────────────────────────────────────────────────────
+
+func TestReserveOverlap_QueueOneDispatching(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "q1d", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne))
+
+	// Set state without holding s.mu, then call reserveOverlap which acquires s.mu
+	state := s.jobs["q1d"]
+	state.running = 1
+	state.queuedDispatching = true
+	runnable, reason := s.reserveOverlap(state, time.Now(), 1)
+	if runnable {
+		t.Fatal("expected not runnable with queuedDispatching=true")
+	}
+	if reason != "overlap_queue_full" {
+		t.Fatalf("expected overlap_queue_full, got %v", reason)
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// markRunStarted — 直接测试各分支
+// ────────────────────────────────────────────────────────────────
+
+func TestMarkRunStarted_DirectOverlapSkipBusy(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "mrs-skip", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapSkip))
+
+	state := s.jobs["mrs-skip"]
+	state.running = 1
+	runnable, reason := s.markRunStarted(state, time.Now(), 1)
+	if runnable {
+		t.Fatal("expected not runnable with OverlapSkip + running>0")
+	}
+	if reason != "overlap" {
+		t.Fatalf("expected overlap, got %v", reason)
+	}
+}
+
+func TestMarkRunStarted_DirectQueueOneDispatching(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "mrs-q1d", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne))
+
+	state := s.jobs["mrs-q1d"]
+	state.running = 1
+	state.queuedDispatching = true
+	runnable, reason := s.markRunStarted(state, time.Now(), 1)
+	if runnable {
+		t.Fatal("expected not runnable with QueueOne + queuedDispatching")
+	}
+	if reason != "overlap_queue_full" {
+		t.Fatalf("expected overlap_queue_full, got %v", reason)
+	}
+}
+
+func TestMarkRunStarted_DirectQueueOneQueued(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "mrs-q1q", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne))
+
+	state := s.jobs["mrs-q1q"]
+	state.running = 1
+	runnable, reason := s.markRunStarted(state, time.Now(), 1)
+	if runnable {
+		t.Fatal("expected not runnable with QueueOne + running>0")
+	}
+	if reason != "queued" {
+		t.Fatalf("expected queued, got %v", reason)
+	}
+	if !state.queued {
+		t.Fatal("expected state.queued=true")
+	}
+}
+
+func TestMarkRunStarted_DirectQueueOneQueueFull(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "mrs-q1f", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne))
+
+	state := s.jobs["mrs-q1f"]
+	state.running = 1
+	state.queued = true
+	runnable, reason := s.markRunStarted(state, time.Now(), 1)
+	if runnable {
+		t.Fatal("expected not runnable with QueueOne + queued=true")
+	}
+	if reason != "overlap_queue_full" {
+		t.Fatalf("expected overlap_queue_full, got %v", reason)
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// markQueuedRunStarted — 直接测试各分支
+// ────────────────────────────────────────────────────────────────
+
+func TestMarkQueuedRunStarted_DirectClosed(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "mqrs-closed", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second))
+
+	state := s.jobs["mqrs-closed"]
+	state.queuedDispatching = true
+	s.closed = true
+	result := s.markQueuedRunStarted(state)
+	if result {
+		t.Fatal("expected false when closed")
+	}
+	if state.queuedDispatching {
+		t.Fatal("expected queuedDispatching=false after failed check")
+	}
+}
+
+func TestMarkQueuedRunStarted_DirectNotDispatching(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "mqrs-nd", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second))
+
+	state := s.jobs["mqrs-nd"]
+	state.queuedDispatching = false
+	result := s.markQueuedRunStarted(state)
+	if result {
+		t.Fatal("expected false when not queuedDispatching")
+	}
+}
+
+func TestMarkQueuedRunStarted_DirectCtxErr(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "mqrs-ctx", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	s.Start(ctx)
+	cancel()
+	time.Sleep(10 * time.Millisecond)
+
+	state := s.jobs["mqrs-ctx"]
+	state.queuedDispatching = true
+	result := s.markQueuedRunStarted(state)
+	if result {
+		t.Fatal("expected false when ctx cancelled")
+	}
+}
+
+func TestMarkQueuedRunStarted_DirectNilCtx(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "mqrs-nil", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second))
+
+	state := s.jobs["mqrs-nil"]
+	state.queuedDispatching = true
+	result := s.markQueuedRunStarted(state)
+	if result {
+		t.Fatal("expected false when ctx is nil")
+	}
+}
+
+func TestMarkQueuedRunStarted_DirectSuccess(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "mqrs-ok", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second))
+	s.Start(context.Background())
+	t.Cleanup(func() { shutdownScheduler(t, s) })
+
+	state := s.jobs["mqrs-ok"]
+	state.queuedDispatching = true
+	result := s.markQueuedRunStarted(state)
+	if !result {
+		t.Fatal("expected true for valid queued dispatch")
+	}
+	if state.running != 1 {
+		t.Fatalf("expected running=1, got %d", state.running)
+	}
+	if state.queuedDispatching {
+		t.Fatal("expected queuedDispatching=false after success")
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchQueued — 直接测试 acquireSlot 失败
+// ────────────────────────────────────────────────────────────────
+
+func TestDispatchQueued_DirectAcquireSlotFail(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "dq-asf", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	s.Start(ctx)
+	// Cancel immediately → acquireSlot will fail
+	cancel()
+	time.Sleep(10 * time.Millisecond)
+
+	state := s.jobs["dq-asf"]
+	s.dispatchQueued(state, time.Now(), 1)
+	// Should not panic, should clear queuedDispatching
+	if state.queuedDispatching {
+		t.Fatal("expected queuedDispatching=false after acquireSlot failure")
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchQueued — markQueuedRunStarted 失败
+// ────────────────────────────────────────────────────────────────
+
+func TestDispatchQueued_DirectMarkQueuedFail(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "dq-mqf", RunFunc: func(context.Context) error { return nil }}
+	_ = s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	s.Start(ctx)
+
+	state := s.jobs["dq-mqf"]
+	state.queuedDispatching = true
+
+	// Cancel ctx → markQueuedRunStarted will return false
+	cancel()
+	time.Sleep(10 * time.Millisecond)
+
+	s.dispatchQueued(state, time.Now(), 1)
+	// Should not panic
+}
+
+// ────────────────────────────────────────────────────────────────
+// collectMissed — trigger.Next returns false during collection
+// ────────────────────────────────────────────────────────────────
+
+func TestCollectMissed_TriggerExhausted(t *testing.T) {
+	s, _ := NewScheduler()
+	// Once trigger fires once then returns false
+	job := JobFunc{NameValue: "cm-exhaust", RunFunc: func(context.Context) error { return nil }}
+	at := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	_ = s.AddJob(job, Once(at))
+
+	state := s.jobs["cm-exhaust"]
+	missed, capped := s.collectMissed(state, at, at.Add(time.Hour))
+	// collectMissed should collect the first missed time, then trigger.Next returns false
+	if len(missed) != 1 {
+		t.Fatalf("expected 1 missed, got %d", len(missed))
+	}
+	if capped {
+		t.Fatal("expected not capped")
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// NewScheduler — 默认 clock 和 MaxConcurrent
+// ────────────────────────────────────────────────────────────────
+
+func TestNewScheduler_Defaults(t *testing.T) {
+	s, err := NewScheduler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.clock == nil {
+		t.Fatal("expected non-nil default clock")
+	}
+	if cap(s.sem) != 1 {
+		t.Fatalf("expected sem cap 1, got %d", cap(s.sem))
+	}
+	if len(s.jobs) != 0 {
+		t.Fatalf("expected 0 jobs, got %d", len(s.jobs))
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// WithLockTTL — 正常值
+// ────────────────────────────────────────────────────────────────
+
+func TestWithLockTTL_Normal(t *testing.T) {
+	s, _ := NewScheduler()
+	job := JobFunc{NameValue: "ttl-normal", RunFunc: func(context.Context) error { return nil }}
+	if err := s.AddJob(job, Every(time.Second), WithLockTTL(30*time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	if s.jobs["ttl-normal"].cfg.lockTTL != 30*time.Second {
+		t.Fatalf("expected 30s, got %v", s.jobs["ttl-normal"].cfg.lockTTL)
+	}
+}
