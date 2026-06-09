@@ -8,12 +8,16 @@ import (
 	"github.com/ZoneCNH/schedulex/pkg/schedulex"
 )
 
-func main() {
-	s, _ := schedulex.NewScheduler()
-	job := schedulex.JobFunc{NameValue: "heartbeat", RunFunc: func(context.Context) error {
+var heartbeatJob = schedulex.JobFunc{
+	NameValue: "heartbeat",
+	RunFunc: func(context.Context) error {
 		fmt.Println("tick")
 		return nil
-	}}
-	_ = s.AddJob(job, schedulex.Every(time.Minute))
+	},
+}
+
+func main() {
+	s, _ := schedulex.NewScheduler()
+	_ = s.AddJob(heartbeatJob, schedulex.Every(time.Minute))
 	fmt.Println(s.Snapshot().Version)
 }
