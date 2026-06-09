@@ -1,0 +1,93 @@
+{
+  "description": "DST transition golden test cases for schedulex trigger Next() calculations",
+  "cases": [
+    {
+      "name": "spring_forward_new_york",
+      "description": "US Eastern: 2026-03-08 02:00 → 03:00 (lose 1 hour). DailyAt(3,30) should fire at 03:30 EDT (UTC-4), not skip.",
+      "timezone": "America/New_York",
+      "trigger": {"type": "daily_at", "hour": 3, "minute": 30},
+      "after": "2026-03-08T01:30:00-05:00",
+      "expected_next": "2026-03-08T03:30:00-04:00",
+      "dst_change": "spring_forward",
+      "utc_offset_before": "-05:00",
+      "utc_offset_after": "-04:00"
+    },
+    {
+      "name": "fall_back_new_york",
+      "description": "US Eastern: 2026-11-01 02:00 → 01:00 (repeat 1 hour). DailyAt(1,30) should fire in the first occurrence (EDT, UTC-4).",
+      "timezone": "America/New_York",
+      "trigger": {"type": "daily_at", "hour": 1, "minute": 30},
+      "after": "2026-11-01T00:30:00-04:00",
+      "expected_next": "2026-11-01T01:30:00-04:00",
+      "dst_change": "fall_back",
+      "utc_offset_before": "-04:00",
+      "utc_offset_after": "-05:00"
+    },
+    {
+      "name": "spring_forward_london",
+      "description": "UK: 2026-03-29 01:00 → 02:00 (lose 1 hour). DailyAt(2,0) should fire at 02:00 BST (UTC+1).",
+      "timezone": "Europe/London",
+      "trigger": {"type": "daily_at", "hour": 2, "minute": 0},
+      "after": "2026-03-29T00:30:00+00:00",
+      "expected_next": "2026-03-29T02:00:00+01:00",
+      "dst_change": "spring_forward",
+      "utc_offset_before": "+00:00",
+      "utc_offset_after": "+01:00"
+    },
+    {
+      "name": "fall_back_london",
+      "description": "UK: 2026-10-25 02:00 → 01:00 (repeat 1 hour). DailyAt(1,30) resolves to GMT (UTC+0) per Go time.Date behavior.",
+      "timezone": "Europe/London",
+      "trigger": {"type": "daily_at", "hour": 1, "minute": 30},
+      "after": "2026-10-25T00:30:00+01:00",
+      "expected_next": "2026-10-25T01:30:00+00:00",
+      "dst_change": "fall_back",
+      "utc_offset_before": "+01:00",
+      "utc_offset_after": "+00:00"
+    },
+    {
+      "name": "positive_offset_tokyo",
+      "description": "Asia/Tokyo has no DST (UTC+9). DailyAt(9,0) should always fire at 09:00 JST.",
+      "timezone": "Asia/Tokyo",
+      "trigger": {"type": "daily_at", "hour": 9, "minute": 0},
+      "after": "2026-03-08T08:30:00+09:00",
+      "expected_next": "2026-03-08T09:00:00+09:00",
+      "dst_change": "none",
+      "utc_offset_before": "+09:00",
+      "utc_offset_after": "+09:00"
+    },
+    {
+      "name": "half_hour_offset_india",
+      "description": "Asia/Kolkata has no DST (UTC+5:30). DailyAt(9,30) should fire at 09:30 IST.",
+      "timezone": "Asia/Kolkata",
+      "trigger": {"type": "daily_at", "hour": 9, "minute": 30},
+      "after": "2026-03-08T09:00:00+05:30",
+      "expected_next": "2026-03-08T09:30:00+05:30",
+      "dst_change": "none",
+      "utc_offset_before": "+05:30",
+      "utc_offset_after": "+05:30"
+    },
+    {
+      "name": "spring_forward_sydney",
+      "description": "Australia/Sydney: 2026-10-04 02:00 → 03:00 (lose 1 hour). DailyAt(3,0) fires at 03:00 AEDT (UTC+11).",
+      "timezone": "Australia/Sydney",
+      "trigger": {"type": "daily_at", "hour": 3, "minute": 0},
+      "after": "2026-10-04T01:30:00+10:00",
+      "expected_next": "2026-10-04T03:00:00+11:00",
+      "dst_change": "spring_forward",
+      "utc_offset_before": "+10:00",
+      "utc_offset_after": "+11:00"
+    },
+    {
+      "name": "fall_back_sydney",
+      "description": "Australia/Sydney: 2026-04-05 03:00 → 02:00 (repeat 1 hour). DailyAt(2,30) resolves to AEST (UTC+10) per Go time.Date behavior.",
+      "timezone": "Australia/Sydney",
+      "trigger": {"type": "daily_at", "hour": 2, "minute": 30},
+      "after": "2026-04-05T01:30:00+11:00",
+      "expected_next": "2026-04-05T02:30:00+10:00",
+      "dst_change": "fall_back",
+      "utc_offset_before": "+11:00",
+      "utc_offset_after": "+10:00"
+    }
+  ]
+}
