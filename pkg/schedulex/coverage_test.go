@@ -3267,3 +3267,131 @@ func TestWithLockTTL_Normal(t *testing.T) {
 		t.Fatalf("expected 30s, got %v", s.jobs["ttl-normal"].cfg.lockTTL)
 	}
 }
+
+// ────────────────────────────────────────────────────────────────
+// reconcilePendingMisfire — CatchUp 策略返回 run time (line 156)
+// ────────────────────────────────────────────────────────────────
+
+func TestReconcilePendingMisfire_CatchUpReturnsRun(t *testing.T) {
+	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(2))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	job := JobFunc{NameValue: "recon-catchup", RunFunc: func(context.Context) error { return nil }}
+	if err := s.AddJob(job, Every(time.Second), WithMisfirePolicy(MisfireCatchUp)); err != nil {
+		t.Fatal(err)
+	}
+
+	state := s.jobs["recon-catchup"]
+	scheduled := start
+
+	// 推进时钟使其超过 scheduled + misfireGrace → shouldReconcileMisfire 返回 true
+	clock.Advance(2 * time.Second)
+
+	// 直接调用 reconcilePendingMisfire，CatchUp 策略应返回 runs
+	result, shouldRun := s.reconcilePendingMisfire(state, scheduled, 1)
+	if !shouldRun {
+		t.Fatal("expected shouldRun=true with MisfireCatchUp and non-empty runs")
+	}
+	if result.IsZero() {
+		t.Fatal("expected non-zero run time")
+	}
+	if !result.Equal(scheduled) {
+		t.Fatalf("expected result=%v, got %v", scheduled, result)
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchQueued — acquireSlot 失败 + clearQueuedDispatching
+// ────────────────────────────────────────────────────────────────
+
+func TestDispatchQueued_AcquireSlotCtxDone(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(2))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	job := JobFunc{NameValue: "dq-ctx-fail", RunFunc: func(context.Context) error { return nil }}
+	if err := s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	state := s.jobs["dq-ctx-fail"]
+
+	// 设置 queuedDispatching 状态
+	state.queuedDispatching = true
+
+	// 取消 ctx → acquireSlot 将返回 false
+	s.cancel()
+	time.Sleep(10 * time.Millisecond)
+
+	// dispatchQueued 应走到 acquireSlot 失败分支，清理 queuedDispatching
+	s.dispatchQueued(state, start, 1)
+
+	if state.queuedDispatching {
+		t.Fatal("expected queuedDispatching=false after acquireSlot failure")
+	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// dispatchRun — markRunStarted 返回 false (overlap) after slot acquired
+// CatchUp + OverlapSkip: misfire 通过 dispatchReady 调度多个 run
+// 第一个成功，后续 markRunStarted 因 OverlapSkip+running>0 失败
+// ────────────────────────────────────────────────────────────────
+
+func TestDispatchRun_MarkRunStartedFails(t *testing.T) {
+	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
+	clock := NewStaticClock(start)
+	events := newEventRecorder()
+	started := make(chan struct{}, 4)
+	release := make(chan struct{})
+	var releaseOnce sync.Once
+
+	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(4))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		releaseOnce.Do(func() { close(release) })
+		shutdownScheduler(t, s)
+	})
+
+	job := JobFunc{NameValue: "mrs-fail", RunFunc: func(context.Context) error {
+		started <- struct{}{}
+		<-release
+		return nil
+	}}
+	if err := s.AddJob(job, Every(time.Second), WithMisfirePolicy(MisfireCatchUp), WithOverlapPolicy(OverlapSkip)); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	waitForScheduled(t, events, "mrs-fail")
+	// 大幅推进 → 触发多个 missed fires → CatchUp 尝试 dispatchReady 多次
+	// 第一次 markRunStarted 成功 (running=0→1)
+	// 后续 markRunStarted 失败 (OverlapSkip, running>0) → lines 97-102
+	clock.Advance(3 * time.Second)
+
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("first run did not start")
+	}
+	time.Sleep(50 * time.Millisecond)
+
+	releaseOnce.Do(func() { close(release) })
+}

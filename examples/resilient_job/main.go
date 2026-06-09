@@ -154,9 +154,9 @@ func (r *ResilientJob) retryDelay(attempt int) time.Duration {
 
 // ─── 示例用法 ─────────────────────────────────────────────────
 
-func main() {
-	// 创建带 resilience 的 job
-	settlement := &ResilientJob{
+// newSettlementJob 创建示例 resilient job。可替换用于测试。
+var newSettlementJob = func() *ResilientJob {
+	return &ResilientJob{
 		Name_: "order-settlement",
 		Execute: func(ctx context.Context) error {
 			log.Println("执行订单结算...")
@@ -170,6 +170,10 @@ func main() {
 			ResetAfter: 1 * time.Minute,
 		},
 	}
+}
+
+func main() {
+	settlement := newSettlementJob()
 
 	// 在 scheduler 中注册 resilient job：
 	//
