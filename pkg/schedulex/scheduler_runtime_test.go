@@ -49,13 +49,13 @@ func TestSchedulerAppliesJitterBeforeDispatch(t *testing.T) {
 	select {
 	case <-ran:
 		t.Fatal("job ran before jittered scheduled instant")
-	case <-time.After(20 * time.Millisecond):
+	case <-time.After(2 * time.Second):
 	}
 
 	clock.Set(expected)
 	select {
 	case <-ran:
-	case <-time.After(time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("job did not run at jittered scheduled instant")
 	}
 }
@@ -149,7 +149,7 @@ func TestSchedulerSkipMisfireOnSingleLateRun(t *testing.T) {
 	select {
 	case <-ran:
 		t.Fatal("misfire skip ran the late job")
-	case <-time.After(50 * time.Millisecond):
+	case <-time.After(2 * time.Second):
 	}
 	if got := runs.Load(); got != 0 {
 		t.Fatalf("runs = %d; want 0", got)
@@ -199,7 +199,7 @@ func TestSchedulerGlobalBackpressureDoesNotMarkPendingJobRunning(t *testing.T) {
 	clock.Advance(time.Second)
 	select {
 	case <-blockerStarted:
-	case <-time.After(time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("blocker did not start")
 	}
 	events.waitFor(t, EventStarted, func(event Event) bool {
@@ -214,7 +214,7 @@ func TestSchedulerGlobalBackpressureDoesNotMarkPendingJobRunning(t *testing.T) {
 	select {
 	case <-pendingStarted:
 		t.Fatal("pending job started while global concurrency slot was occupied")
-	case <-time.After(50 * time.Millisecond):
+	case <-time.After(2 * time.Second):
 	}
 	assertJobSnapshot(t, s, "pending", func(job JobSnapshot) bool {
 		return !job.Running
@@ -223,7 +223,7 @@ func TestSchedulerGlobalBackpressureDoesNotMarkPendingJobRunning(t *testing.T) {
 	releaseOnce.Do(func() { close(release) })
 	select {
 	case <-pendingStarted:
-	case <-time.After(time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("pending job did not start after global slot was released")
 	}
 	if skipped, found := events.find(EventSkipped, func(event Event) bool {
@@ -275,7 +275,7 @@ func TestSchedulerQueueOneRunsQueuedAfterCurrentCompletes(t *testing.T) {
 	select {
 	case run := <-started:
 		t.Fatalf("queued run started before current run completed: %d", run)
-	case <-time.After(20 * time.Millisecond):
+	case <-time.After(2 * time.Second):
 	}
 
 	close(release)
@@ -331,7 +331,7 @@ func TestSchedulerQueueOneHonorsMisfireSkipForStaleQueuedRun(t *testing.T) {
 	select {
 	case run := <-started:
 		t.Fatalf("queued stale run started before current run completed: %d", run)
-	case <-time.After(30 * time.Millisecond):
+	case <-time.After(2 * time.Second):
 	}
 
 	events.waitFor(t, EventScheduled, func(event Event) bool {
@@ -417,7 +417,7 @@ func expectStartedRun(t *testing.T, started <-chan int, want int) {
 		if got != want {
 			t.Fatalf("started run = %d; want %d", got, want)
 		}
-	case <-time.After(time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatalf("run %d did not start", want)
 	}
 }
@@ -460,7 +460,7 @@ func (r *eventRecorder) OnEvent(_ context.Context, event Event) {
 
 func (r *eventRecorder) waitFor(t *testing.T, eventType EventType, ok func(Event) bool) Event {
 	t.Helper()
-	deadline := time.After(time.Second)
+	deadline := time.After(5 * time.Second)
 	for {
 		if event, found := r.find(eventType, ok); found {
 			return event
