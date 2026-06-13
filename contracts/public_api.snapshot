@@ -14,7 +14,7 @@ const ModuleName = "github.com/ZoneCNH/schedulex"
 const OverlapAllow OverlapPolicy = "allow"
 const OverlapQueueOne OverlapPolicy = "queue_one"
 const OverlapSkip OverlapPolicy = "skip"
-const Version = "v0.1.0"
+const Version = "v1.0.0"
 func ApplyDeterministicJitter(time.Time, JitterPolicy, string, int64) time.Time
 func Cron(string, *time.Location, ...TriggerOption) (Trigger, error)
 func DailyAt(int, int, *time.Location, ...TriggerOption) Trigger

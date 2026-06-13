@@ -1,6 +1,6 @@
 # Template Generation Contract
 
-`scripts/render_template.sh` 是从 `schedulex` 生成具体基础库的唯一标准入口。旧 `baselib-template` module path 只作为迁移扫描项和兼容说明保留，不能作为新主身份。
+`scripts/render_template.sh` 是从 `schedulex` 生成具体基础库的唯一标准入口。旧 module path 只作为迁移扫描项和兼容说明保留，不能作为新主身份。
 
 ## 默认示例
 
@@ -16,7 +16,7 @@ scripts/render_template.sh \
 
 - Module name、module path 和 package name 占位符必须替换为目标库值。
 - `github.com/ZoneCNH/schedulex` 模板自身 import 到目标 module path。
-- 旧迁移扫描项：`github.com/ZoneCNH/baselib-template`、`baselib-template`、`foundationx`。
+- 旧迁移扫描项：旧 module path、旧 module name、旧下游示例名。
 - `pkg/schedulex` 目录名到 `pkg/<package-name>`。
 - README、docs、contracts、examples、scripts、Python 验证器、snapshot/golden 文件、CODEOWNERS 和 manifest 中的模板占位。
 
@@ -58,17 +58,17 @@ generator 不得复制：
 - 只对生成结果中实际存在的 Go 目录执行 `gofmt`，不得因某个模板库缺少可选目录而失败。
 - 无 template token 未替换残留。
 - 无 generic placeholder、TODO-style template marker 或 `schedulex_` metrics prefix 残留。
-- 无 `baselib-template` module import 残留，除非在文档中作为来源说明出现。
+- 无旧 module path import 残留，除非在文档中作为来源说明出现。
 - `GOWORK=off go mod tidy` 后 `go.mod` 和 `go.sum` 保持 clean。
 
 ## Scanner
 
 `scripts/check_rendered_template.sh` 必须扫描：
 
-- stale module path：`github.com/ZoneCNH/baselib-template`。
-- stale module name：`baselib-template`。
+- stale module path：旧 module path。
+- stale module name：旧 module name。
 - stale package directory：`pkg/schedulex`。
-- stale package name：`schedulex`、`Templatex`、`TEMPLATEX`。
+- stale package name：`schedulex`、旧 TitleCase package name、旧 UPPERCASE package name。
 - stale metrics prefix：`schedulex_`。
 - unresolved template token、generic placeholder 和 TODO-style template marker。
 

@@ -2,7 +2,7 @@
 
 本文定义 `schedulex` 变更后如何同步到下游基础库。`schedulex` 是 Standard Source、Go Reference Template、Generator、Harness 和 Evidence Runtime 的唯一标准源；下游只消费这些标准和模板结果，不反向决定标准内容。
 
-旧 `baselib-template` 和 `foundationx` 名称只保留在迁移文档语境中。当前持久同步目标使用 `kernel` 与 L1/L2 基础库命名；`corekit` 仅作为中性路径 smoke/integration 验证目标，`schedulex` 是标准源而不是下游同步目标。
+当前持久同步目标使用 `kernel` 与 L1/L2 基础库命名；`corekit` 仅作为中性路径 smoke/integration 验证目标，`schedulex` 是标准源而不是下游同步目标。
 
 ## 角色
 
@@ -32,7 +32,7 @@
 
 `.agent/truth-state.yaml` 的 forbidden upgrades 是该口径的单一约束：`registered != adopted`、`baseline_scanned != adopted/implemented`、`patch_only != proof_based_adoption`、`not_run != passed`。
 
-`Context Runtime v4.0 profile` 是 context profile / registry bridge 的同步条目名称，不改写 Full Goal Runtime v3.1 的 `.agent/` 工件版本，也不替代 [docs/goal.md](goal/goal.md) v2.9.3 Complete 的治理主基线。
+`Context Runtime v4.0 profile` 是 context profile / registry bridge 的同步条目名称，不改写 Full Goal Runtime v3.1 的 `.agent/` 工件版本，也不替代 [docs/goal.md](goal/goal.md) v1.0.0 Release 的治理主基线。
 
 ## 变更到同步动作映射
 

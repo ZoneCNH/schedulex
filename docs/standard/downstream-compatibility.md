@@ -7,7 +7,7 @@
 - `kernel`：默认 L0 集成目标，module path 为 `github.com/ZoneCNH/kernel`，是 Full Goal Runtime v3.1 的必跑下游集成目标。
 - `corekit`：中性组织路径 smoke，module path 为 `example.com/acme/corekit`，用于证明 generator 不依赖固定组织、GitHub owner 或 module prefix。
 
-旧 `foundationx` 只作为迁移兼容名出现，不再是默认下游。
+旧下游示例名只作为迁移兼容名出现，不再是默认下游。
 
 ## 目标库矩阵
 

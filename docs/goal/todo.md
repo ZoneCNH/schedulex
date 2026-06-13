@@ -47,7 +47,7 @@ harness+ self-improving
 issues
 
 
-汇总以上 完整的方案，使用 schedulex 版本 v0.1.0 开始
+汇总以上完整方案，使用 schedulex 版本 v1.0.0 开始
 深度检查，是否还有遗漏
 下载完整.md
 

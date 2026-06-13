@@ -45,6 +45,7 @@ func TestSchedulerAppliesJitterBeforeDispatch(t *testing.T) {
 		t.Fatalf("scheduled at %v; want jittered instant %v", scheduled.ScheduledAt, expected)
 	}
 
+	waitForStaticClockWaiter(t, clock, expected)
 	clock.Set(first)
 	select {
 	case <-ran:
@@ -86,6 +87,7 @@ func TestSchedulerCatchUpMisfireDispatchesMissedRuns(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(event Event) bool {
 		return event.JobID == "catch-up" && event.ScheduledAt.Equal(start.Add(time.Second))
 	})
+	waitForStaticClockWaiter(t, clock, start.Add(time.Second))
 	clock.Advance(3 * time.Second)
 
 	misfire := events.waitFor(t, EventMisfire, func(event Event) bool {
@@ -160,33 +162,29 @@ func TestSchedulerGlobalBackpressureDoesNotMarkPendingJobRunning(t *testing.T) {
 	start := time.Date(2026, 6, 4, 9, 0, 0, 0, time.UTC)
 	clock := NewStaticClock(start)
 	events := newEventRecorder()
-	blockerStarted := make(chan struct{}, 1)
 	pendingStarted := make(chan struct{}, 1)
-	release := make(chan struct{})
-	var releaseOnce sync.Once
 
 	s, err := NewScheduler(WithClock(clock), WithEventSink(events), WithMaxConcurrent(1))
 	if err != nil {
 		t.Fatal(err)
 	}
+	s.sem <- struct{}{}
+	globalSlotHeld := true
 	t.Cleanup(func() {
-		releaseOnce.Do(func() { close(release) })
+		if globalSlotHeld {
+			select {
+			case <-s.sem:
+			default:
+			}
+		}
 		shutdownScheduler(t, s)
 	})
 
-	blocker := JobFunc{NameValue: "blocker", RunFunc: func(context.Context) error {
-		blockerStarted <- struct{}{}
-		<-release
-		return nil
-	}}
 	pending := JobFunc{NameValue: "pending", RunFunc: func(context.Context) error {
 		pendingStarted <- struct{}{}
 		return nil
 	}}
-	if err := s.AddJob(blocker, Once(start.Add(time.Second))); err != nil {
-		t.Fatal(err)
-	}
-	if err := s.AddJob(pending, Once(start.Add(2*time.Second))); err != nil {
+	if err := s.AddJob(pending, Once(start.Add(time.Second))); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Start(context.Background()); err != nil {
@@ -194,20 +192,7 @@ func TestSchedulerGlobalBackpressureDoesNotMarkPendingJobRunning(t *testing.T) {
 	}
 
 	events.waitFor(t, EventScheduled, func(event Event) bool {
-		return event.JobID == "blocker" && event.ScheduledAt.Equal(start.Add(time.Second))
-	})
-	clock.Advance(time.Second)
-	select {
-	case <-blockerStarted:
-	case <-time.After(5 * time.Second):
-		t.Fatal("blocker did not start")
-	}
-	events.waitFor(t, EventStarted, func(event Event) bool {
-		return event.JobID == "blocker"
-	})
-
-	events.waitFor(t, EventScheduled, func(event Event) bool {
-		return event.JobID == "pending" && event.ScheduledAt.Equal(start.Add(2*time.Second))
+		return event.JobID == "pending" && event.ScheduledAt.Equal(start.Add(time.Second))
 	})
 	clock.Advance(time.Second)
 
@@ -220,12 +205,13 @@ func TestSchedulerGlobalBackpressureDoesNotMarkPendingJobRunning(t *testing.T) {
 		return !job.Running
 	}, "pending job should not be marked running while waiting for global slot")
 
-	releaseOnce.Do(func() { close(release) })
 	select {
-	case <-pendingStarted:
-	case <-time.After(5 * time.Second):
-		t.Fatal("pending job did not start after global slot was released")
+	case <-s.sem:
+		globalSlotHeld = false
+	default:
+		t.Fatal("global concurrency slot was not occupied before release")
 	}
+	expectStartedSignal(t, clock, pendingStarted, "pending job did not start after global slot was released")
 	if skipped, found := events.find(EventSkipped, func(event Event) bool {
 		return event.JobID == "pending" && event.Reason == "overlap"
 	}); found {
@@ -419,6 +405,50 @@ func expectStartedRun(t *testing.T, started <-chan int, want int) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatalf("run %d did not start", want)
+	}
+}
+
+func expectStartedSignal(t *testing.T, clock *StaticClock, started <-chan struct{}, message string) {
+	t.Helper()
+	deadline := time.After(5 * time.Second)
+	tick := time.NewTicker(10 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		select {
+		case <-started:
+			return
+		case <-tick.C:
+			clock.Advance(0)
+		case <-deadline:
+			t.Fatal(message)
+		}
+	}
+}
+
+func waitForStaticClockWaiter(t *testing.T, clock *StaticClock, at time.Time) {
+	t.Helper()
+	deadline := time.After(5 * time.Second)
+	tick := time.NewTicker(time.Millisecond)
+	defer tick.Stop()
+	for {
+		clock.mu.Lock()
+		found := false
+		for _, waiter := range clock.waiters {
+			if waiter.at.Equal(at) {
+				found = true
+				break
+			}
+		}
+		clock.mu.Unlock()
+		if found {
+			return
+		}
+
+		select {
+		case <-tick.C:
+		case <-deadline:
+			t.Fatalf("static clock waiter for %v was not registered", at)
+		}
 	}
 }
 

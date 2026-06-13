@@ -154,13 +154,13 @@ func (r *ResilientJob) retryDelay(attempt int) time.Duration {
 
 // ─── 示例用法 ─────────────────────────────────────────────────
 
-// newSettlementJob 创建示例 resilient job。可替换用于测试。
-var newSettlementJob = func() *ResilientJob {
+// newResilientJob 创建示例 resilient job。可替换用于测试。
+var newResilientJob = func() *ResilientJob {
 	return &ResilientJob{
-		Name_: "order-settlement",
+		Name_: "retryable-maintenance",
 		Execute: func(ctx context.Context) error {
-			log.Println("执行订单结算...")
-			// 模拟业务逻辑
+			log.Println("执行可重试任务...")
+			// 模拟任务逻辑
 			return nil
 		},
 		Retry:   DefaultRetryPolicy(),
@@ -173,11 +173,11 @@ var newSettlementJob = func() *ResilientJob {
 }
 
 func main() {
-	settlement := newSettlementJob()
+	job := newResilientJob()
 
 	// 在 scheduler 中注册 resilient job：
 	//
-	//   scheduler.AddJob(settlement, schedulex.Every(time.Minute),
+	//   scheduler.AddJob(job, schedulex.Every(time.Minute),
 	//       schedulex.WithMisfirePolicy(schedulex.MisfireRunOnce),
 	//       schedulex.WithOverlapPolicy(schedulex.OverlapSkip),
 	//   )
@@ -185,7 +185,7 @@ func main() {
 	// scheduler 负责：触发时机、misfire、overlap
 	// ResilientJob 负责：retry、timeout、circuit breaker
 
-	if err := settlement.Run(context.Background()); err != nil {
+	if err := job.Run(context.Background()); err != nil {
 		log.Printf("job failed: %v", err)
 	} else {
 		log.Println("job succeeded")

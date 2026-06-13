@@ -1,6 +1,6 @@
 # 模块边界
 
-本文件约束 `schedulex`、生成基础库、`kernel` 和 `x.go` 的模块边界。边界违规必须在 PR、review 或 release gate 中阻断。旧名 `baselib-template` 只保留为迁移兼容名，不再是主仓库角色。
+本文件约束 `schedulex`、生成基础库、`kernel` 和 `x.go` 的模块边界。边界违规必须在 PR、review 或 release gate 中阻断。旧模板名只保留为迁移兼容名，不再是主仓库角色。
 
 ## `schedulex` 允许内容
 
@@ -18,7 +18,7 @@
 - 业务领域模型、业务 repository、业务消息 schema 或应用生命周期编排。
 - 生产密钥、真实连接串、默认生产 endpoint，或 `/home/k8s/secrets/env/*` 内容。
 - 隐藏全局 client、隐式后台进程或不可关闭资源。
-- 把旧 `baselib-template` / `foundationx` 叙事作为主身份；旧名只能出现在迁移文档语境。
+- 把旧模板名 / 旧下游示例名叙事作为主身份；旧名只能出现在迁移文档语境。
 
 ## 生成基础库允许内容
 

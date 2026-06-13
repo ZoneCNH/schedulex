@@ -108,7 +108,7 @@ func TestPublicAPISnapshotDocumentsExportedSurface(t *testing.T) {
 			t.Fatalf("public API snapshot missing %q", item)
 		}
 	}
-	if schedulex.ModuleName != "github.com/ZoneCNH/schedulex" || schedulex.Version != "v0.1.0" {
+	if schedulex.ModuleName != "github.com/ZoneCNH/schedulex" || schedulex.Version != "v1.0.0" {
 		t.Fatalf("unexpected schedulex identity: %s %s", schedulex.ModuleName, schedulex.Version)
 	}
 }

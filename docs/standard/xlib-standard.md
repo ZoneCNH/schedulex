@@ -1,13 +1,13 @@
 # 基础库总标准
 
-本文定义 `x.go` 基础库体系的最小生产标准。`schedulex` 是 [`https://github.com/ZoneCNH/schedulex`](https://github.com/ZoneCNH/schedulex) 对应的统一仓库，同时承担 Standard Source、Go Reference Template、Generator、Harness 和 Evidence Runtime。旧 `baselib-template` 只作为迁移文档语境中的兼容名出现，不再表示独立主实现仓库。
+本文定义 `x.go` 基础库体系的最小生产标准。`schedulex` 是 [`https://github.com/ZoneCNH/schedulex`](https://github.com/ZoneCNH/schedulex) 对应的统一仓库，同时承担 Standard Source、Go Reference Template、Generator、Harness 和 Evidence Runtime。旧模板名只作为迁移文档语境中的兼容名出现，不再表示独立主实现仓库。
 
 ## 仓库定位
 
 - `schedulex`：标准权威源，也是 Go 基础库模板、generator、Harness 和 Evidence 实现仓库。
 - `kernel`：默认 L0 下游集成目标，用于证明模板生成和基础能力边界。
 - 生成库：由 `schedulex` 渲染得到的具体基础库，必须遵守本标准，并通过自身 Harness 和 Evidence 证明符合性。
-- 旧 `baselib-template` / `foundationx`：仅允许在迁移文档语境中出现。
+- 旧模板名 / 旧下游示例名：仅允许在迁移文档语境中出现。
 
 ## 标准目标
 

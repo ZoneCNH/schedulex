@@ -2,7 +2,7 @@
 
 ## 1. 定位
 
-`schedulex` 是基础库测试策略母版，不绑定 `x.go` 业务模型。它定义所有生成基础库必须继承的测试分层、Gate 标准、Evidence 规则和扩展测试 profile。旧 `baselib-template` 名称只用于迁移说明。
+`schedulex` 是基础库测试策略母版，不绑定 `x.go` 业务模型。它定义所有生成基础库必须继承的测试分层、Gate 标准、Evidence 规则和扩展测试 profile。
 
 ## 2. 非目标
 

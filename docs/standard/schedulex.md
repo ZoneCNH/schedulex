@@ -7,7 +7,7 @@
 - Go module：`github.com/ZoneCNH/schedulex`
 - 包路径：`github.com/ZoneCNH/schedulex/pkg/schedulex`
 - Layer：`L1`
-- 版本：`v0.1.0`
+- 版本：`v1.0.0`
 - 角色：deterministic scheduler
 
 ## 公共 API
@@ -67,7 +67,7 @@
 GOWORK=off make release-final-check
 GOWORK=off make identity-check fmt vet lint test race boundary contracts docs-check security evidence release-final-check
 GOWORK=off make trigger-determinism-check misfire-contract-check timezone-dst-golden-check scheduler-leak-check scheduler-race-check lock-interface-check api-check downstream-smoke
-GOWORK=off make release-preflight VERSION=v0.1.0
+GOWORK=off make release-preflight VERSION=v1.0.0
 ```
 
 Evidence 必须写入 `release/manifest/latest.json`，并由 `release/manifest/latest.json.sha256` 校验。最终完成声明必须包含 `DONE with evidence:`。

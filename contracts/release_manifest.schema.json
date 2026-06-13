@@ -15,7 +15,7 @@
   ],
   "properties": {
     "module": { "const": "github.com/ZoneCNH/schedulex" },
-    "version": { "const": "v0.1.0" },
+    "version": { "const": "v1.0.0" },
     "layer": { "const": "L1" },
     "role": { "const": "deterministic_scheduler" },
     "goal_id": { "const": "GOAL-20260604-SCHEDULEX-001" },

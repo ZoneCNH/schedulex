@@ -9,8 +9,8 @@ schedulex 的 `EventSink` 接口接收 `Event` 结构体，用于调度生命周
 ```json
 {
   "type": "started",
-  "job_id": "order-settlement",
-  "job_name": "order-settlement",
+  "job_id": "retryable-maintenance",
+  "job_name": "retryable-maintenance",
   "at": "2026-06-09T10:00:00.123Z",
   "scheduled_at": "2026-06-09T10:00:00.000Z",
   "started_at": "2026-06-09T10:00:00.123Z",

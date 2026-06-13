@@ -107,7 +107,7 @@ Goal 或 Release 级完成声明必须覆盖以下字段，缺失项要写入 `k
 - `release score`：`schedulex score` 的阈值和 manifest `score` 校验状态。
 - `workflow artifact`：`workflow_run_id`、`artifact_name`、`artifact_url` 或明确的本地 artifact 说明。
 - `gates`：`fmt`、`vet`、`test`、`race`、`lint`、`security`、`contracts`、`boundary`、`integration`、`dependency-check`、`standard-impact-check`、`evidence`、`release-evidence-check`、`release-final-check`。
-- `rendered downstream`：`kernel` 和 `corekit` 的 generator 验证状态；旧 `foundationx` 仅作为迁移扫描项记录。
+- `rendered downstream`：`kernel` 和 `corekit` 的 generator 验证状态；旧下游示例名仅作为迁移扫描项记录。
 - `workspace`：clean、dirty 或 blocked，并说明 dirty 原因。
 
 ## 禁止声明

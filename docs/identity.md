@@ -2,7 +2,7 @@
 
 ## 我是谁
 
-`schedulex` 是 FoundationX 的 **L1 运行时确定性任务调度库**，提供 trigger/clock/misfire/overlap/jitter 调度原语。
+`schedulex` 是 **L1 运行时确定性任务调度库**，提供 trigger/clock/misfire/overlap/jitter 调度原语。
 
 ## 我做什么
 
@@ -23,7 +23,7 @@
 | **不是分布式锁实现** | Locker 是接口，实现由调用方提供 |
 | **不是 exactly-once 语义引擎** | exactly-once 需要外部协调 |
 | **不是业务任务编排引擎** | 业务语义由调用方定义 |
-| **不是模板源** | 模板生成属于 xlib-standard |
+| **不是模板源** | 标准文档与生成脚本只描述基础库生成约束 |
 | **不硬依赖 observex/resiliencx** | 观测和弹性策略由调用方组合注入 |
 
 ## 我的边界

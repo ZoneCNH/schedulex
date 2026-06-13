@@ -58,7 +58,7 @@ type Locker interface {
 }
 ```
 
-分布式锁扩展点。v0.1.0 未内置 Redis/Postgres 实现，需自行适配。返回 `ErrLockUnavailable` 表示锁不可用。
+分布式锁扩展点。v1.0.0 未内置 Redis/Postgres 实现，需自行适配。返回 `ErrLockUnavailable` 表示锁不可用。
 
 ### Lease
 
@@ -504,7 +504,7 @@ func ReconcileMisfire(policy MisfirePolicy, missed []time.Time) []time.Time
 | 常量 | 值 | 说明 |
 |------|------|------|
 | `ModuleName` | `"github.com/ZoneCNH/schedulex"` | Go module 路径 |
-| `Version` | `"v0.1.0"` | 当前版本号 |
+| `Version` | `"v1.0.0"` | 当前版本号 |
 
 ---
 

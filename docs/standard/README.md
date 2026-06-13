@@ -1,6 +1,6 @@
 # schedulex 标准索引
 
-[`github.com/ZoneCNH/schedulex`](https://github.com/ZoneCNH/schedulex) 当前交付目标是 `pkg/schedulex` 的 L1 deterministic scheduler v0.1.0。本索引用于定位 L1 调度器的 API、边界、gate 和 Evidence 规则。
+[`github.com/ZoneCNH/schedulex`](https://github.com/ZoneCNH/schedulex) 当前交付目标是 `pkg/schedulex` 的 L1 deterministic scheduler v1.0.0。本索引用于定位 L1 调度器的 API、边界、gate 和 Evidence 规则。
 
 ## 必读标准
 
@@ -17,7 +17,7 @@
 ```bash
 GOWORK=off make docs-check
 GOWORK=off make release-final-check
-GOWORK=off make release-preflight VERSION=v0.1.0
+GOWORK=off make release-preflight VERSION=v1.0.0
 ```
 
 完整 release Evidence 还需要 `release/manifest/latest.json`、`release/manifest/latest.json.sha256`、public API snapshot、trigger/misfire/timezone-DST golden、downstream smoke 和最终 `DONE with evidence:` 声明。

@@ -2,4 +2,4 @@ module example.com/schedulex-downstream-smoke
 
 go 1.23
 
-require github.com/ZoneCNH/schedulex v0.1.0
+require github.com/ZoneCNH/schedulex v1.0.0

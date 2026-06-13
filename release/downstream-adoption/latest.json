@@ -1,6 +1,6 @@
 {
   "module": "github.com/ZoneCNH/schedulex",
-  "version": "v0.1.0",
+  "version": "v1.0.0",
   "mode": "no_local_replace_fixture",
   "status": "published",
   "network_command": "SCHEDULEX_DOWNSTREAM_NETWORK=1 ./scripts/check_downstream_smoke.sh",

@@ -1,6 +1,6 @@
 # schedulex
 
-`github.com/ZoneCNH/schedulex` 是 `pkg/schedulex` 的 L1 deterministic scheduler v0.1.0。它只依赖 Go 标准库，提供可复现的任务调度、触发器、misfire 处理、确定性 jitter、事件输出和分布式锁扩展接口。
+`github.com/ZoneCNH/schedulex` 是 `pkg/schedulex` 的 L1 deterministic scheduler v1.0.0。它只依赖 Go 标准库，提供可复现的任务调度、触发器、misfire 处理、确定性 jitter、事件输出和分布式锁扩展接口。
 
 ## 能力范围
 
@@ -61,7 +61,7 @@ GOWORK=off make docs-check
 GOWORK=off make release-final-check
 GOWORK=off make identity-check fmt vet lint test race boundary contracts docs-check security evidence release-final-check
 GOWORK=off make trigger-determinism-check misfire-contract-check timezone-dst-golden-check scheduler-leak-check scheduler-race-check lock-interface-check api-check downstream-smoke
-GOWORK=off make release-preflight VERSION=v0.1.0
+GOWORK=off make release-preflight VERSION=v1.0.0
 ```
 
 Evidence 输出位于 `release/downstream-adoption/latest.json`，校验和位于 `release/downstream-adoption/latest.json.sha256`。Release manifest 位于 `release/manifest/latest.json`，校验和位于 `release/manifest/latest.json.sha256`。最终完成声明必须包含 `DONE with evidence:`。
