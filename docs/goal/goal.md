@@ -1,34 +1,34 @@
-# schedulex 完整 Goal 可执行方案 v2.9.3 Complete
+# schedulex 完整 Goal 可执行方案 v1.0.0 Release
 
-> 版本：v2.9.3 Complete
+> 版本：v1.0.0 Release
 > 目标仓库：`https://github.com/ZoneCNH/schedulex`  
 > 首批下游验证：`github.com/ZoneCNH/kernel`、`github.com/ZoneCNH/configx`
 > 执行标准：Goal Runtime v3.1 + First-Principles + Harness Engineering + Karpathy 四原则 + Self-improving + AutoResearch + Compound Engineering
 > 生成日期：2026-06-02
-> 替代版本：v2.9、v2.9.1、v2.9.2
+> 替代版本：v1.0.0-pre、v1.0.0-rc
 
 ---
 
-## 0. 第三轮审计结论
+## 0. 发布前审计结论
 
-本版是一个**主文档重编译版本**，不再把 v2.9.1 / v2.9.2 的补丁作为附录，而是把它们合并进主执行流。
+本版是 `v1.0.0` 发布基线的**主文档重编译版本**，不再把早期治理补丁作为附录，而是把它们合并进主执行流。
 
-第三轮审计发现，v2.9.2 已补齐大量落地缺口，但仍有 3 类风险需要集成进完整版：
+发布前审计发现，当前基线已补齐大量落地缺口，但仍有 3 类风险需要集成进发布基线：
 
-1. **补丁附录化风险**：v2.9.2 的新增 Issue、命令、Makefile、验收标准散落在后文，Agent 实施时可能只读取前文 P0/P1/P2 Pack 而漏掉补丁。
-2. **命名与自符合风险**：旧名 `baselib-template` / `foundationx` 缺少明确 guard；且下游 adoption 前应先完成 `schedulex` 自身 standard-source profile attestation。
+1. **补丁附录化风险**：早期治理补丁的新增 Issue、命令、Makefile、验收标准散落在后文，Agent 实施时可能只读取前文 P0/P1/P2 Pack 而漏掉补丁。
+2. **命名与自符合风险**：旧模板名 / 旧下游示例名缺少明确 guard；且下游 adoption 前应先完成 `schedulex` 自身 standard-source profile attestation。
 3. **执行入口漂移风险**：Issue Registry、Command Registry、Makefile Target Registry、Policy Schema、Toolchain、Evidence Path、GitHub Settings、Runtime File Ownership 必须统一进入 SSOT，否则后续多 Agent 实施会漂移。
 
-因此 v2.9.3 的裁决是：
+因此 v1.0.0 的裁决是：
 
 ```text
-v2.9.3 Complete = v2.9 主方案
-  + v2.9.1 治理对象与上下文补丁
-  + v2.9.2 执行一致性补丁
-  + v2.9.3 命名一致性、自符合证明、主文档重编译
+v1.0.0 Release = v1.0 主方案
+  + 治理对象与上下文补丁
+  + 执行一致性补丁
+  + 命名一致性、自符合证明、主文档重编译
 ```
 
-实际执行应以 **v2.9.3 Complete** 为准。
+实际执行应以 **v1.0.0 Release** 为准。
 
 ---
 
@@ -46,7 +46,7 @@ Standard Source
   + Downstream Conformance Runtime
 ```
 
-v2.9.3 完成后必须具备：
+v1.0.0 完成后必须具备：
 
 1. P0 Minimal Kernel：防止 main 开发、无 worktree、无 Evidence DONE、x.go 反向依赖、production secret default、Makefile/CI/manifest 缺失。
 2. P1 Governance Hardening：Agent Team、Scope Lock、PR Contract、Acceptance Matrix、Runtime Health、GitHub Governance、Toolchain、Policy Schema、Evidence Artifact、Self-Healing Skeleton。
@@ -82,7 +82,7 @@ TRUTH-010  标准必须被采用，才有价值。
 ### 2.3 可打破限制
 
 ```text
-LIMIT-001  不必一开始实现完整 v2.9.3；先 P0，再 P1，再 P2。
+LIMIT-001  v1.0.0 release 先证明 P0，再 P1，再 P2。
 LIMIT-002  不必一开始做 Fleet Dashboard；P2 完成后再做。
 LIMIT-003  不必一开始做 Formal Model Checking；Release Readiness Formula 先足够。
 LIMIT-004  不必所有 Article 都变成 Gate；ACTIVE + BLOCKING 才必须 Gate。
@@ -176,7 +176,7 @@ P2: Runtime & Conformance Automation
 
 ```yaml
 goal_id: GOAL-20260602-001
-title: schedulex v2.9.3 Constitution Runtime & Conformance Automation
+title: schedulex v1.0.0 Constitution Runtime & Conformance Automation
 mode: full
 owner: lead
 repository: github.com/ZoneCNH/schedulex
@@ -349,7 +349,7 @@ GOWORK=off go run ./cmd/schedulex makefile-baseline
 | P1-018 | GitHub Settings Apply and Verify Protocol   | github-governance | C3         | .agent/github-settings.yaml; docs/standard/github-settings.md; scripts/github/verify_settings.sh                                                                                                                                                  | schedulex github-settings --verify; schedulex codeowners                     | Required checks/branch protection/rulesets 可验证；apply 不隐式执行                            |
 | P1-019 | Toolchain Pinning Baseline                  | supply-chain      | C2         | .tool-versions; .agent/toolchain.yaml; docs/standard/toolchain.md                                                                                                                                                                                 | schedulex toolchain; make lint; make security                               | 本地/CI 工具版本 SSOT；禁止 required tools 使用 latest                                         |
 | P1-020 | Evidence Artifact Path and Retention Policy | evidence          | C2         | .agent/evidence-artifact-policy.yaml; docs/standard/evidence-artifacts.md                                                                                                                                                                         | schedulex evidence-artifacts                                                | release/evidence 与 release/manifest 路径、retention、DONE links 规范                          |
-| P1-021 | Naming Consistency and Legacy Name Guard    | docs/governance   | C2         | .agent/naming-policy.yaml; docs/standard/naming.md; internal/schedulex/naming/\*\*                                                                                                                                                                 | schedulex naming; docs-check                                                | 默认名称统一 schedulex/kernel；旧名 baselib-template/foundationx 仅允许迁移/ADR/兼容上下文 |
+| P1-021 | Naming Consistency and Legacy Name Guard    | docs/governance   | C2         | .agent/naming-policy.yaml; docs/standard/naming.md; internal/schedulex/naming/\*\*                                                                                                                                                                 | schedulex naming; docs-check                                                | 默认名称统一 schedulex/kernel；旧模板名和旧下游示例名仅允许迁移/ADR/兼容上下文 |
 
 ### 8.1 P1 验收命令
 
@@ -846,15 +846,15 @@ Third-party policy admission
 ```text
 standard repo: schedulex
 L0 downstream: kernel
-old template name: baselib-template only allowed in migration docs context
-old downstream example: foundationx only allowed in migration docs context
+old template name: legacy-template-name only allowed in migration docs context
+old downstream example: legacy-downstream-name only allowed in migration docs context
 ```
 
 禁止：
 
 ```text
-1. README 主叙事使用 baselib-template。
-2. Generator 默认输出 foundationx。
+1. README 主叙事使用旧模板名。
+2. Generator 默认输出旧下游示例名。
 3. Release manifest 使用旧名作为当前事实。
 4. 下游 adoption manifest 使用旧名。
 ```
@@ -1005,7 +1005,7 @@ GOWORK=off go test ./...
 GOWORK=off go run ./cmd/schedulex cli-contract
 ```
 
-### 30 天：完成 P1 + P2 到 v2.9.3
+### 30 天：完成 P1 + P2 到 v1.0.0
 
 ```text
 1. P1 Governance Hardening 全部完成。
@@ -1078,7 +1078,7 @@ P3/P4
 最终裁决：
 
 ```text
-schedulex v2.9.3 Complete 的核心目标，
+schedulex v1.0.0 Release 的核心目标，
 是把前面所有宪法、方法论、Harness、Agent Teams、Self-improving、AutoResearch、Compound Engineering
 收敛成一个可执行工程内核：
 P0 先防灾难，

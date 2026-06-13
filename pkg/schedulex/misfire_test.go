@@ -46,7 +46,7 @@ func TestMisfireContract_Skip(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// 跳过 5 分钟，模拟 misfire
-	clock.Advance(5 * time.Minute + misfireGrace + time.Millisecond)
+	clock.Advance(5*time.Minute + misfireGrace + time.Millisecond)
 
 	// 给 job 一点时间执行
 	time.Sleep(50 * time.Millisecond)

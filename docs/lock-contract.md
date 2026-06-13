@@ -92,7 +92,7 @@ func (l *MemoryLocker) TryLock(ctx context.Context, key string, ttl time.Duratio
 locker := NewRedisLocker(redisClient)
 scheduler.AddJob(job, trigger,
     schedulex.WithLocker(locker),
-    schedulex.WithLockKey("order-settlement"),
+    schedulex.WithLockKey("cache-refresh"),
     schedulex.WithLockTTL(5*time.Minute),
 )
 ```

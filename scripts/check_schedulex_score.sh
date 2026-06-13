@@ -20,6 +20,9 @@ if [[ -z "$min" ]]; then
   exit 1
 fi
 
+export VERSION="${VERSION:-v1.0.0}"
+export GOWORK="${GOWORK:-off}"
+
 require_file() {
   [[ -f "$1" ]] || { echo "ERROR: missing file: $1" >&2; exit 1; }
 }
@@ -46,33 +49,42 @@ go test ./pkg/schedulex -run '^TestPublicAPISnapshot$' -count=1
 ./scripts/check_governance.sh p2
 
 score="10.0"
-deductions=0
+deductions="0.0"
+
+add_deduction() {
+  deductions=$(awk -v current="$deductions" -v amount="$1" 'BEGIN { printf "%.1f", current + amount }')
+}
 
 # 检查 go vet
 if ! GOWORK=off go vet ./... 2>/dev/null; then
-  deductions=$(echo "$deductions + 2.0" | bc)
+  add_deduction 2.0
 fi
 
 # 检查测试通过
 if ! GOWORK=off go test ./... 2>/dev/null; then
-  deductions=$(echo "$deductions + 2.0" | bc)
+  add_deduction 2.0
 fi
 
 # 检查覆盖率（低于 80% 扣分）
-coverage=$(GOWORK=off go test ./pkg/schedulex -coverprofile=/tmp/_score_cover.out 2>/dev/null | grep -oP 'coverage: \K[0-9.]+')
-if [ -n "$coverage" ]; then
-  cov_num=$(echo "$coverage" | sed 's/%//')
-  if (( $(echo "$cov_num < 80" | bc -l) )); then
-    deductions=$(echo "$deductions + 1.0" | bc)
-  fi
+coverage=$(GOWORK=off go test ./pkg/schedulex -coverprofile=/tmp/_score_cover.out 2>/dev/null | awk '/coverage:/ {
+  for (i = 1; i <= NF; i++) {
+    if ($i ~ /^[0-9]+(\.[0-9]+)?%$/) {
+      gsub("%", "", $i)
+      print $i
+      exit
+    }
+  }
+}')
+if [[ -n "$coverage" ]] && awk -v coverage="$coverage" 'BEGIN { exit (coverage + 0 < 80) ? 0 : 1 }'; then
+  add_deduction 1.0
 fi
 
 # 检查 race
 if ! GOWORK=off go test -race ./pkg/schedulex 2>/dev/null; then
-  deductions=$(echo "$deductions + 1.0" | bc)
+  add_deduction 1.0
 fi
 
-score=$(echo "10.0 - $deductions" | bc)
+score=$(awk -v deductions="$deductions" 'BEGIN { printf "%.1f", 10.0 - deductions }')
 
 awk -v s="$score" -v m="$min" 'BEGIN { exit (s + 0 >= m + 0) ? 0 : 1 }' || {
   echo "ERROR: score=$score below min=$min" >&2

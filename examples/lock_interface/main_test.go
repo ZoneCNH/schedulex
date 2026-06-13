@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -25,7 +26,7 @@ func TestTryLockAndRelease(t *testing.T) {
 
 	// Second lock while held should fail.
 	_, err = l.TryLock(ctx, "job", time.Minute)
-	if err != schedulex.ErrLockUnavailable {
+	if !errors.Is(err, schedulex.ErrLockUnavailable) {
 		t.Fatalf("expected ErrLockUnavailable, got %v", err)
 	}
 

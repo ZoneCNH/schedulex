@@ -110,9 +110,9 @@ func TestTriggerDeterminism_DSTGoldenValidates(t *testing.T) {
 
 	var golden struct {
 		Cases []struct {
-			Name         string `json:"name"`
-			Timezone     string `json:"timezone"`
-			Trigger      struct {
+			Name     string `json:"name"`
+			Timezone string `json:"timezone"`
+			Trigger  struct {
 				Type   string `json:"type"`
 				Hour   int    `json:"hour"`
 				Minute int    `json:"minute"`

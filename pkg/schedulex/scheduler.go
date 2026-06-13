@@ -10,7 +10,7 @@ import (
 
 const (
 	ModuleName = "github.com/ZoneCNH/schedulex"
-	Version    = "v0.1.0"
+	Version    = "v1.0.0"
 
 	maxMisfireCatchUp = 128
 	misfireGrace      = 100 * time.Millisecond

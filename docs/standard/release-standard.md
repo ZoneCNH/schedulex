@@ -1,6 +1,6 @@
 # 发布标准
 
-发布流程必须证明源码、contracts、依赖和 gate 状态一致。`schedulex` 的 release 标准同时约束生成基础库；旧 `baselib-template` 仅作为迁移兼容名记录。
+发布流程必须证明源码、contracts、依赖和 gate 状态一致。`schedulex` 的 release 标准同时约束生成基础库；旧模板名仅作为迁移兼容名记录。
 
 ## 发布路径
 

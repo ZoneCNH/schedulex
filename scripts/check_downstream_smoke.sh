@@ -7,6 +7,10 @@ if grep -R --line-number '^replace ' "$fixture/go.mod"; then
   echo "ERROR: downstream smoke fixture must not use local replace"
   exit 1
 fi
+if ! grep -Fq "github.com/ZoneCNH/schedulex ${version}" "$fixture/go.mod"; then
+  echo "ERROR: downstream smoke fixture must require github.com/ZoneCNH/schedulex ${version}" >&2
+  exit 1
+fi
 if [[ "${SCHEDULEX_DOWNSTREAM_NETWORK:-0}" == "1" ]]; then
   tmp="$(mktemp -d "${TMPDIR:-/tmp}/schedulex-downstream-smoke.XXXXXX")"
   cp -R "$fixture"/. "$tmp"/

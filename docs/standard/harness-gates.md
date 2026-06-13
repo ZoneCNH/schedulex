@@ -25,7 +25,7 @@ Full Goal Runtime v3.1 以 `cmd/schedulex` 作为 Go gate runtime。Makefile tar
 | Release Evidence | `RELEASE_EVIDENCE_REQUIRE_PASSED=1 GOWORK=off make release-evidence-check` | 校验 manifest 与仓库事实 |
 
 
-## Goal v2.9.3 Governance Gate
+## schedulex v1.0.0 Governance Gate
 
 | Gate | 命令 | 目的 |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ Full Goal Runtime v3.1 以 `cmd/schedulex` 作为 Go gate runtime。Makefile tar
 | P1 Governance Dry Run | `GOWORK=off make p1-governance-check` | 验证 policy schema、GitHub settings intent、toolchain、Evidence artifacts、naming、install/upgrade runtime 与 release-ready 文档，不读取外部 secrets。 |
 | P2 Runtime Dry Run | `GOWORK=off make p2-runtime-check` | 验证 standard-source/l0-kernel conformance、pack-standard/pack-gate/pack-evidence、downstream patch-only、runtime-file-ownership 和 execution-context。 |
 
-这些 target 是 `docs/goal.md` v2.9.3 可执行方案的验收入口；CI 通过 `GOWORK=off XLIB_CONTEXT=ci_pull_request make release-check` 覆盖 `governance-check`、`p1-governance-check` 与 `p2-runtime-check`，避免 workflow 层重复执行同一治理链。
+这些 target 是 `docs/goal/goal.md` v1.0.0 release baseline 可执行方案的验收入口；CI 通过 `GOWORK=off XLIB_CONTEXT=ci_pull_request make release-check` 覆盖 `governance-check`、`p1-governance-check` 与 `p2-runtime-check`，避免 workflow 层重复执行同一治理链。
 
 `issue-registry` 是语义 gate：它校验 issue ID 唯一且按前缀连续、状态为 `implemented`，并要求每个条目具备命令和 Evidence。`agent-team-contract`、`acceptance-matrix`、`runtime-health` 和 `execution-context` 的 dry-run 必须读取对应文件并检查 `schema_version` 等语义 marker，不能退化为文件存在检查。
 
@@ -69,7 +69,7 @@ Generator gate 必须证明模板能生成代表性下游，而不是只证明 `
 - `kernel`
 - `corekit`
 
-旧 `foundationx` 只作为迁移兼容扫描项，不再作为默认下游。
+旧下游示例名只作为迁移兼容扫描项，不再作为默认下游。
 
 ## Final Gates
 

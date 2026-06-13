@@ -1,6 +1,6 @@
 # Agent Team Contract
 
-Goal v2.9.3 team 由 leader 负责计划、集成和最终 Review；worker 只执行被分配的 slice，并通过 Evidence 报告结果。worker 不重写全局计划，不覆盖主工作区，不读真实 secrets。
+schedulex v1.0.0 release team 由 leader 负责计划、集成和最终 Review；worker 只执行被分配的 slice，并通过 Evidence 报告结果。worker 不重写全局计划，不覆盖主工作区，不读真实 secrets。
 
 每个 worker 完成时必须提供：
 

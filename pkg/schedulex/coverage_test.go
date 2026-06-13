@@ -1625,7 +1625,7 @@ func TestModuleConstants(t *testing.T) {
 	if ModuleName != "github.com/ZoneCNH/schedulex" {
 		t.Fatalf("unexpected ModuleName: %v", ModuleName)
 	}
-	if Version != "v0.1.0" {
+	if Version != "v1.0.0" {
 		t.Fatalf("unexpected Version: %v", Version)
 	}
 }
@@ -2174,7 +2174,8 @@ func TestEmit_NilCtxWithSink(t *testing.T) {
 	}
 	state := s.jobs["nil-ctx-sink"]
 	// Pass nil ctx to emit — should not panic, should create background ctx internally
-	s.emit(nil, s.event(state, EventScheduled, clock.Now()))
+	var nilCtx context.Context
+	s.emit(nilCtx, s.event(state, EventScheduled, clock.Now()))
 	if atomic.LoadInt32(&received) != 1 {
 		t.Fatalf("expected 1 event, got %d", received)
 	}
@@ -2280,7 +2281,8 @@ func TestShutdown_NilCtxDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Shutdown with nil ctx — should not panic
-	if err := s.Shutdown(nil); err != nil {
+	var nilCtx context.Context
+	if err := s.Shutdown(nilCtx); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -2295,7 +2297,8 @@ func TestStart_NilCtxDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Start with nil ctx — should not panic
-	if err := s.Start(nil); err != nil {
+	var nilCtx context.Context
+	if err := s.Start(nilCtx); err != nil {
 		t.Fatal(err)
 	}
 	shutdownScheduler(t, s)
@@ -3119,7 +3122,9 @@ func TestMarkQueuedRunStarted_DirectCtxErr(t *testing.T) {
 	_ = s.AddJob(job, Every(time.Second))
 
 	ctx, cancel := context.WithCancel(context.Background())
-	s.Start(ctx)
+	if err := s.Start(ctx); err != nil {
+		t.Fatal(err)
+	}
 	cancel()
 	time.Sleep(10 * time.Millisecond)
 
@@ -3148,7 +3153,9 @@ func TestMarkQueuedRunStarted_DirectSuccess(t *testing.T) {
 	s, _ := NewScheduler()
 	job := JobFunc{NameValue: "mqrs-ok", RunFunc: func(context.Context) error { return nil }}
 	_ = s.AddJob(job, Every(time.Second))
-	s.Start(context.Background())
+	if err := s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
 	t.Cleanup(func() { shutdownScheduler(t, s) })
 
 	state := s.jobs["mqrs-ok"]
@@ -3175,7 +3182,9 @@ func TestDispatchQueued_DirectAcquireSlotFail(t *testing.T) {
 	_ = s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne))
 
 	ctx, cancel := context.WithCancel(context.Background())
-	s.Start(ctx)
+	if err := s.Start(ctx); err != nil {
+		t.Fatal(err)
+	}
 	// Cancel immediately → acquireSlot will fail
 	cancel()
 	time.Sleep(10 * time.Millisecond)
@@ -3198,7 +3207,9 @@ func TestDispatchQueued_DirectMarkQueuedFail(t *testing.T) {
 	_ = s.AddJob(job, Every(time.Second), WithOverlapPolicy(OverlapQueueOne))
 
 	ctx, cancel := context.WithCancel(context.Background())
-	s.Start(ctx)
+	if err := s.Start(ctx); err != nil {
+		t.Fatal(err)
+	}
 
 	state := s.jobs["dq-mqf"]
 	state.queuedDispatching = true

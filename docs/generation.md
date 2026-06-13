@@ -2,7 +2,7 @@
 
 ## 用途
 
-`scripts/render_template.sh` 用于把 `schedulex` 参考模板渲染为具体基础库，例如 `kernel`。标准源仓库是 [`schedulex`](https://github.com/ZoneCNH/schedulex)，并同时承载模板、generator、Harness 和 Evidence 实现。旧 `baselib-template` / `foundationx` 名称只作为迁移文档语境保留。脚本负责同步替换 module name、module path、package name、`pkg/` 目录名、imports、文档占位符和脚本中的模板名称。
+`scripts/render_template.sh` 用于把 `schedulex` 参考模板渲染为具体基础库，例如 `kernel`。标准源仓库是 [`schedulex`](https://github.com/ZoneCNH/schedulex)，并同时承载模板、generator、Harness 和 Evidence 实现。旧模板名 / 旧下游示例名只作为迁移文档语境保留。脚本负责同步替换 module name、module path、package name、`pkg/` 目录名、imports、文档占位符和脚本中的模板名称。
 
 ## 示例
 
@@ -19,8 +19,8 @@ scripts/render_template.sh \
 ## 渲染范围
 
 - `{{MODULE_NAME}}` 替换为 `--module-name`。
-- `{{MODULE_PATH}}`、`github.com/ZoneCNH/schedulex` 和迁移兼容的 `github.com/ZoneCNH/baselib-template` 替换为 `--module-path`。
-- `schedulex` 和迁移兼容的 `baselib-template` 替换为 `--module-name`。
+- `{{MODULE_PATH}}`、`github.com/ZoneCNH/schedulex` 和迁移兼容的旧 module path 替换为 `--module-path`。
+- `schedulex` 和迁移兼容的旧 module name 替换为 `--module-name`。
 - `{{PACKAGE_NAME}}`、`pkg/schedulex` 和 `schedulex` imports 替换为 `--package-name`。
 - 文档、Go 代码、JSON contract、shell 脚本、Makefile 和 CI 配置同步更新；标准源仓库仍是 [`https://github.com/ZoneCNH/schedulex`](https://github.com/ZoneCNH/schedulex)，渲染产物中的源身份会改写为下游 module identity，避免残留模板仓库名称。
 

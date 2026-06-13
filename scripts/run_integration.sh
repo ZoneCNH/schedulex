@@ -8,7 +8,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # Local downstream smoke uses the committed module identity. The fixture go.mod has no local replace;
-# CI can run it after v0.1.0 publication. Local pre-release verifies the import path via examples
+# CI can run it after v1.0.0 publication. Local pre-release verifies the import path via examples
 # plus rendered downstream modules.
 ! grep -q '^replace ' test/downstream-smoke/go.mod
 GOWORK=off go test ./examples/...

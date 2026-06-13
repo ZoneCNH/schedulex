@@ -1,6 +1,6 @@
 # Downstream Registry
 
-Goal v2.9.3 的代表下游以 patch-only 方式验证，不直接写外部仓库。
+v1.0.0 发布基线的代表下游以 patch-only 方式验证，不直接写外部仓库。
 
 | Repo | Role | Mode | Notes |
 | --- | --- | --- | --- |

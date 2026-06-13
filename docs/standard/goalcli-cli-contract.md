@@ -1,6 +1,6 @@
 # schedulex CLI Contract
 
-`schedulex` 是 schedulex v2.9.3 的 machine-verifiable gate surface。除明确委托给既有脚本的命令外，所有命令必须输出包含 `command`、`status`、可选 `details` 和可选 `gaps` 的 JSON report，并符合 `contracts/schedulex-report.schema.json`。
+`schedulex` 是 schedulex v1.0.0 的 machine-verifiable gate surface。除明确委托给既有脚本的命令外，所有命令必须输出包含 `command`、`status`、可选 `details` 和可选 `gaps` 的 JSON report，并符合 `contracts/schedulex-report.schema.json`。
 
 该 CLI 只执行本地非破坏性 contract checks：不读取真实 secrets，不连接外部生产系统，也不修改 downstream 仓库。涉及 GitHub、release、runtime 或 downstream 状态的命令，在当前版本中以本地 contract、manifest 和 dry-run 证据表达。
 
@@ -112,9 +112,9 @@
 - `downstream-adoption --repo kernel/configx --mode patch-only`
 - `execution-context`
 
-## Goalcli MVA commands
+## Goal runtime evidence commands
 
-Goalcli MVA commands（`goal-acceptance`、`goal-delivery`、`goal-handover`、`goal-downstream-adoption`、`goal-certify` 和 `goal-runtime-final`）用于证明 `schedulex v0.1.0` 的 G12-G16 evidence contracts，并且只在 schedulex MVA evidence scope 内是 blocking gate。它们不会创建第二套并列 schedulex 执行面，也不会修改 downstream 仓库。source authority 是 `cmd/schedulex` 执行面和 `.agent/evidence/ledger.jsonl`；`release/evidence/schedulex/` 下的 generated packs 只是派生产物。root schedulex plan 仍是 roadmap authority，完成证据来自同一 `GOAL_ID` 下已调和的 source ledger 和 final report。
+Goal runtime evidence commands（`goal-acceptance`、`goal-delivery`、`goal-handover`、`goal-downstream-adoption`、`goal-certify` 和 `goal-runtime-final`）用于证明 `schedulex v1.0.0` 的 G12-G16 evidence contracts，并且只在 schedulex release evidence scope 内是 blocking gate。它们不会创建第二套并列 schedulex 执行面，也不会修改 downstream 仓库。source authority 是 `cmd/schedulex` 执行面和 `.agent/evidence/ledger.jsonl`；`release/evidence/schedulex/` 下的 generated packs 只是派生产物。root schedulex plan 仍是 roadmap authority，完成证据来自同一 `GOAL_ID` 下已调和的 source ledger 和 final report。
 
 ## Debt governance commands
 
@@ -122,9 +122,9 @@ Debt governance commands are P0 release-blocking gates. `schedulex debt` runs th
 
 `schedulex debt-evidence` writes generated evidence to `release/debt/latest.json`, `release/debt/latest.md`, and `release/debt/latest.json.sha256`. These latest evidence files are reproducible release artifacts and are intentionally ignored by git. P0 debt rules are not exceptable: policy files under `.agent/debt/` must not introduce P0 exception markers, and release verification must fail if debt status is not `passed`.
 
-## Goalcli v0.1.0 MVA runtime commands
+## Goal runtime v1.0.0 release commands
 
-schedulex MVA commands 是由 `.agent/harness.yaml` 背书的本地 `cmd/schedulex` evidence commands；它们把 command、Makefile 和 harness coverage 变成可执行契约。只有当同一 `GOAL_ID` 的 G12-G16 检查都已写入 source ledger 并由 final rollup 调和后，才能证明 schedulex v0.1.0 MVA completion。
+schedulex release commands 是由 `.agent/harness.yaml` 背书的本地 `cmd/schedulex` evidence commands；它们把 command、Makefile 和 harness coverage 变成可执行契约。只有当同一 `GOAL_ID` 的 G12-G16 检查都已写入 source ledger 并由 final rollup 调和后，才能证明 schedulex v1.0.0 release completion。
 
 - `goal-acceptance` 校验 `G12_ACCEPTANCE`。
 - `goal-delivery` 校验 `G13_DELIVERY`。
@@ -148,7 +148,7 @@ schedulex MVA commands 是由 `.agent/harness.yaml` 背书的本地 `cmd/schedul
 
 `issue-registry` 不只是文件存在检查。它必须校验 `.agent/issue-registry.yaml` 中每个条目都具备非空 `title`、`command` 和 `evidence`，`status` 必须为 `implemented`，ID 必须匹配 `P0|P1|P2|CTX-###`、全局唯一，并且每个前缀从 `001` 连续编号。`context-profile-check` 复用该 registry 语义，不能用空文件或非连续 ID 作为通过证据。
 
-planned command 的 dry-run 也必须读取对应文件并检查语义 marker。当前强制 marker 包括：`agent-team-contract` 的 `schema_version:`、`roles:`、`rule:`；`acceptance-matrix` 的 `schema_version:`、`acceptance:`；`runtime-health` 的 `schema_version:`、`checks:`、`toolchain`；schedulex MVA 命令在 `.agent/harness.yaml` 中的 `schedulex_mva_gates:`、对应 `G12_ACCEPTANCE`/`G13_DELIVERY`/`G14_HANDOVER`/`G15_DOWNSTREAM_ADOPTION`/`G16_CERTIFY`/`G12_G16_FINAL` 与命令名；`execution-context` 的 `schema_version:`、`contexts:`、`local_write`、`ci_pull_request`、`release_verify`。这些命令不得退化为单纯路径存在检查。
+planned command 的 dry-run 也必须读取对应文件并检查语义 marker。当前强制 marker 包括：`agent-team-contract` 的 `schema_version:`、`roles:`、`rule:`；`acceptance-matrix` 的 `schema_version:`、`acceptance:`；`runtime-health` 的 `schema_version:`、`checks:`、`toolchain`；schedulex release 命令在 `.agent/harness.yaml` 中的 `schedulex_mva_gates:`、对应 `G12_ACCEPTANCE`/`G13_DELIVERY`/`G14_HANDOVER`/`G15_DOWNSTREAM_ADOPTION`/`G16_CERTIFY`/`G12_G16_FINAL` 与命令名；`execution-context` 的 `schema_version:`、`contexts:`、`local_write`、`ci_pull_request`、`release_verify`。这些命令不得退化为单纯路径存在检查。
 
 ## Context Runtime v4 命令
 

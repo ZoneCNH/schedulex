@@ -19,7 +19,7 @@ func TestResilientJobName(t *testing.T) {
 
 func TestResilientJobRunSuccess(t *testing.T) {
 	r := &ResilientJob{
-		Name_: "ok",
+		Name_:   "ok",
 		Execute: func(ctx context.Context) error { return nil },
 		Retry:   RetryPolicy{MaxAttempts: 3, BaseDelay: time.Millisecond, MaxDelay: time.Second},
 		Timeout: TimeoutPolicy{Timeout: time.Second},
@@ -91,7 +91,7 @@ func TestResilientJobTimeout(t *testing.T) {
 
 func TestResilientJobNoTimeout(t *testing.T) {
 	r := &ResilientJob{
-		Name_: "no-timeout",
+		Name_:   "no-timeout",
 		Execute: func(ctx context.Context) error { return nil },
 		Retry:   RetryPolicy{MaxAttempts: 1},
 		Timeout: TimeoutPolicy{Timeout: 0},
@@ -247,10 +247,10 @@ func TestResilientJobRetryContextCanceled(t *testing.T) {
 }
 
 func TestMainErrorPath(t *testing.T) {
-	// Swap newSettlementJob to return a failing job, then call main()
+	// Swap newResilientJob to return a failing job, then call main()
 	// to exercise the error branch (log.Printf("job failed: ...")).
-	orig := newSettlementJob
-	newSettlementJob = func() *ResilientJob {
+	orig := newResilientJob
+	newResilientJob = func() *ResilientJob {
 		job := orig()
 		job.Execute = func(ctx context.Context) error {
 			return errors.New("injected failure")
@@ -258,7 +258,7 @@ func TestMainErrorPath(t *testing.T) {
 		job.Retry = RetryPolicy{MaxAttempts: 1, BaseDelay: time.Millisecond, MaxDelay: time.Millisecond}
 		return job
 	}
-	defer func() { newSettlementJob = orig }()
+	defer func() { newResilientJob = orig }()
 
 	main()
 }
