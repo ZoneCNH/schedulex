@@ -47,7 +47,7 @@ require_text "README.md" "DONE with evidence:"
 require_text "docs/standard/README.md" "github.com/ZoneCNH/schedulex"
 require_text "docs/standard/README.md" "docs/standard/schedulex.md"
 require_text "docs/standard/README.md" "GOWORK=off make docs-check"
-require_text "docs/standard/README.md" "GOWORK=off make release-preflight VERSION=v0.1.0"
+require_text "docs/standard/README.md" "GOWORK=off make release-preflight VERSION=v1.0.0"
 require_text "docs/standard/README.md" "release/manifest/latest.json.sha256"
 
 require_text "docs/standard/schedulex.md" "github.com/ZoneCNH/schedulex"
@@ -69,7 +69,7 @@ require_text "docs/standard/schedulex.md" "EventSink"
 require_text "docs/standard/schedulex.md" "GOWORK=off make release-final-check"
 require_text "docs/standard/schedulex.md" "downstream-smoke"
 
-require_text "docs/release.md" "GOWORK=off make release-preflight VERSION=v0.1.0"
+require_text "docs/release.md" "GOWORK=off make release-preflight VERSION=v1.0.0"
 require_text "docs/release.md" "release/manifest/latest.json"
 require_text "docs/release.md" "release/manifest/latest.json.sha256"
 
