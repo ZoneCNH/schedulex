@@ -54,10 +54,14 @@ VERSION=v1.0.0 GOWORK=off make release-preflight
 VERSION=v1.0.0 GOWORK=off make release-check
 ```
 
-Non-mutating readiness probe before generated files exist:
+Non-mutating readiness probes before generated files exist:
 
 ```bash
 VERSION=v1.0.0 ./scripts/generate_schedulex_manifest.sh --check
+VERSION=v1.0.0 ./scripts/check_release_preflight.sh
+./scripts/check_schedulex_release.sh
+./scripts/check_schedulex_score.sh
+./scripts/check_docs.sh
 ```
 
 Expected evidence:
@@ -140,7 +144,11 @@ Expected evidence:
 - The module resolves at `github.com/ZoneCNH/schedulex@v1.0.0` without local `replace` directives.
 - The smoke import compiles in a clean module.
 
-## 6. Release-owner handoff checklist
+## 6. Command-order attribution hazards
+
+When a score or release gate fails, record the root-cause command rather than only the aggregate target. In particular, score failures can originate from manifest absence, stale version defaults, governance drift, missing tool prerequisites, or non-existent command paths referenced by docs/gates.
+
+## 7. Release-owner handoff checklist
 
 Before tagging, confirm:
 - All version sources and generated metadata use `v1.0.0`.
