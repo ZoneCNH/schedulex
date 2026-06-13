@@ -134,6 +134,7 @@ func TestSchedulerSkipMisfireOnSingleLateRun(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(event Event) bool {
 		return event.JobID == "single-late-skip" && event.ScheduledAt.Equal(start.Add(time.Second))
 	})
+	waitForStaticClockWaiter(t, clock, start.Add(time.Second))
 	clock.Set(start.Add(1500 * time.Millisecond))
 
 	misfire := events.waitFor(t, EventMisfire, func(event Event) bool {
@@ -194,6 +195,7 @@ func TestSchedulerGlobalBackpressureDoesNotMarkPendingJobRunning(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(event Event) bool {
 		return event.JobID == "pending" && event.ScheduledAt.Equal(start.Add(time.Second))
 	})
+	waitForStaticClockWaiter(t, clock, start.Add(time.Second))
 	clock.Advance(time.Second)
 
 	select {
@@ -251,12 +253,14 @@ func TestSchedulerQueueOneRunsQueuedAfterCurrentCompletes(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(event Event) bool {
 		return event.JobID == "queue-one" && event.ScheduledAt.Equal(start.Add(time.Second))
 	})
+	waitForStaticClockWaiter(t, clock, start.Add(time.Second))
 	clock.Advance(time.Second)
 	expectStartedRun(t, started, 1)
 
 	events.waitFor(t, EventScheduled, func(event Event) bool {
 		return event.JobID == "queue-one" && event.ScheduledAt.Equal(start.Add(2*time.Second))
 	})
+	waitForStaticClockWaiter(t, clock, start.Add(2*time.Second))
 	clock.Advance(time.Second)
 	select {
 	case run := <-started:
@@ -307,12 +311,14 @@ func TestSchedulerQueueOneHonorsMisfireSkipForStaleQueuedRun(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(event Event) bool {
 		return event.JobID == "queue-one-stale" && event.ScheduledAt.Equal(start.Add(time.Second))
 	})
+	waitForStaticClockWaiter(t, clock, start.Add(time.Second))
 	clock.Advance(time.Second)
 	expectStartedRun(t, started, 1)
 
 	events.waitFor(t, EventScheduled, func(event Event) bool {
 		return event.JobID == "queue-one-stale" && event.ScheduledAt.Equal(start.Add(2*time.Second))
 	})
+	waitForStaticClockWaiter(t, clock, start.Add(2*time.Second))
 	clock.Advance(time.Second)
 	select {
 	case run := <-started:
@@ -323,6 +329,7 @@ func TestSchedulerQueueOneHonorsMisfireSkipForStaleQueuedRun(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(event Event) bool {
 		return event.JobID == "queue-one-stale" && event.ScheduledAt.Equal(start.Add(3*time.Second))
 	})
+	waitForStaticClockWaiter(t, clock, start.Add(3*time.Second))
 	clock.Advance(time.Second)
 	releaseOnce.Do(func() { close(release) })
 
@@ -366,6 +373,7 @@ func TestSchedulerRecoversJobPanicAsFailedEvent(t *testing.T) {
 	events.waitFor(t, EventScheduled, func(event Event) bool {
 		return event.JobID == "panic" && event.ScheduledAt.Equal(start.Add(time.Second))
 	})
+	waitForStaticClockWaiter(t, clock, start.Add(time.Second))
 	clock.Advance(time.Second)
 	failed := events.waitFor(t, EventFailed, func(event Event) bool {
 		return event.JobID == "panic"

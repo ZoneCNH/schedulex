@@ -109,12 +109,9 @@ func TestStaticClockSchedulerWaitsForAdvance(t *testing.T) {
 	default:
 	}
 
+	waitForStaticClockWaiter(t, clock, start.Add(time.Minute))
 	clock.Advance(time.Minute)
-	select {
-	case <-ran:
-	case <-time.After(time.Second):
-		t.Fatal("job did not run after static clock advanced")
-	}
+	expectStartedSignal(t, clock, ran, "job did not run after static clock advanced")
 	if got := runCount.Load(); got != 1 {
 		t.Fatalf("run count = %d; want 1", got)
 	}
