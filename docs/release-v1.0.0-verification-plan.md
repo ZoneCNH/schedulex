@@ -148,7 +148,22 @@ Expected evidence:
 
 When a score or release gate fails, record the root-cause command rather than only the aggregate target. In particular, score failures can originate from manifest absence, stale version defaults, governance drift, missing tool prerequisites, or non-existent command paths referenced by docs/gates.
 
-## 7. Release-owner handoff checklist
+## 7. Worker-3 evidence snapshot
+
+Fresh evidence collected on 2026-06-13:
+- PASS: `GOWORK=off go vet ./...`
+- PASS: `GOWORK=off go test ./...`
+- PASS: `GOWORK=off go test -race ./...`
+- PASS: `GOWORK=off make docs-check`
+- PASS: `GOWORK=off make contracts`
+- PASS: `GOWORK=off make api-check`
+- PASS with release-threshold follow-up: `GOWORK=off go test ./pkg/schedulex -coverprofile=coverage.out && go tool cover -func=coverage.out` reported total statement coverage of 98.0%; reconcile before release if the full-score threshold expects the prior 98.2% baseline.
+- FAIL as expected until Worker-1 release anchors are updated: `./scripts/check_release_preflight.sh v1.0.0` reports `unexpected version v1.0.0`.
+- FAIL as expected until the release manifest is generated and committed: `VERSION=v1.0.0 ./scripts/generate_schedulex_manifest.sh --check` and `VERSION=v1.0.0 ./scripts/check_schedulex_score.sh` report `missing release/manifest/latest.json`.
+- FAIL outside this worker's documentation scope: `GOWORK=off make lint` reports existing errcheck/errorlint/staticcheck findings in tests/examples.
+- Omission scan baseline: live-scope `v0.1.0` scan found 145 hits; identity/provenance scan found 286 hits before historical-vs-live classification.
+
+## 8. Release-owner handoff checklist
 
 Before tagging, confirm:
 - All version sources and generated metadata use `v1.0.0`.
