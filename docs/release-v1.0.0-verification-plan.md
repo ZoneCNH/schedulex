@@ -58,14 +58,14 @@ Non-mutating readiness probes before generated files exist:
 
 ```bash
 VERSION=v1.0.0 ./scripts/generate_schedulex_manifest.sh --check
-VERSION=v1.0.0 ./scripts/check_release_preflight.sh
+./scripts/check_release_preflight.sh v1.0.0
 ./scripts/check_schedulex_release.sh
 ./scripts/check_schedulex_score.sh
 ./scripts/check_docs.sh
 ```
 
 Expected evidence:
-- `release/manifest/latest.json` and `release/manifest/latest.json.sha256` both exist.
+- `release/manifest/latest.json` and `release/manifest/latest.json.sha256` both exist, and stale template inputs such as `release/manifest/template.json` cannot overwrite the schedulex manifest shape.
 - `scripts/generate_schedulex_manifest.sh --check` verifies the manifest checksum.
 - Score meets the v1.0.0 full-score threshold.
 - Any generated evidence files are reviewed before commit by the release owner.
@@ -96,7 +96,7 @@ Current blocking examples found by worker-3 before this plan was added:
 - `pkg/schedulex/scheduler.go` public `Version` constant.
 - `contracts/public_api.snapshot` and `contracts/release_manifest.schema.json`.
 - `scripts/generate_manifest.sh`, `scripts/generate_schedulex_manifest.sh`, and `scripts/check_downstream_smoke.sh` defaults.
-- `README.md`, `docs/release.md`, `.agent/harness.yaml`, `release/downstream-adoption/latest.json`, and `release/downstream-adoption/fixture/go.mod`.
+- `README.md`, `docs/release.md`, `.agent/harness.yaml`, `release/downstream-adoption/latest.json`, `release/downstream-adoption/fixture/go.mod`, and `test/downstream-smoke/go.mod`.
 
 ### 4.2 Template/provenance identity anchors
 
@@ -153,6 +153,7 @@ When a score or release gate fails, record the root-cause command rather than on
 Before tagging, confirm:
 - All version sources and generated metadata use `v1.0.0`.
 - `release/manifest/latest.json` and its checksum are present, verified, and committed by the release owner.
+- `release/manifest/template.json`, downstream fixtures, and smoke-test modules are either updated for v1.0.0 or explicitly excluded from live release gates as historical/reference-only artifacts.
 - Release gates do not call missing command paths.
 - Full-score documentation and CI/harness files agree on the same commands.
 - The final release branch is clean after generated evidence review.
