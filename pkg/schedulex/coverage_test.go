@@ -2174,8 +2174,8 @@ func TestEmit_NilCtxWithSink(t *testing.T) {
 	}
 	state := s.jobs["nil-ctx-sink"]
 	// Pass nil ctx to emit — should not panic, should create background ctx internally
-	var nilCtx context.Context
-	s.emit(nilCtx, s.event(state, EventScheduled, clock.Now()))
+	//nolint:staticcheck // Intentionally verifies nil context fallback behavior.
+	s.emit(nil, s.event(state, EventScheduled, clock.Now()))
 	if atomic.LoadInt32(&received) != 1 {
 		t.Fatalf("expected 1 event, got %d", received)
 	}
@@ -2281,8 +2281,8 @@ func TestShutdown_NilCtxDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Shutdown with nil ctx — should not panic
-	var nilCtx context.Context
-	if err := s.Shutdown(nilCtx); err != nil {
+	//nolint:staticcheck // Intentionally verifies nil context fallback behavior.
+	if err := s.Shutdown(nil); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -2297,8 +2297,8 @@ func TestStart_NilCtxDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Start with nil ctx — should not panic
-	var nilCtx context.Context
-	if err := s.Start(nilCtx); err != nil {
+	//nolint:staticcheck // Intentionally verifies nil context fallback behavior.
+	if err := s.Start(nil); err != nil {
 		t.Fatal(err)
 	}
 	shutdownScheduler(t, s)

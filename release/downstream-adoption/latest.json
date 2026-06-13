@@ -2,7 +2,7 @@
   "module": "github.com/ZoneCNH/schedulex",
   "version": "v1.0.0",
   "mode": "no_local_replace_fixture",
-  "status": "published",
+  "status": "fixture_ready_pending_tag",
   "network_command": "SCHEDULEX_DOWNSTREAM_NETWORK=1 ./scripts/check_downstream_smoke.sh",
-  "evidence": "fixture go.mod intentionally has no replace directive; local check verifies the contract without network resolution"
+  "evidence": "fixture go.mod intentionally has no replace directive; local check verifies the contract before v1.0.0 tag publication, then network mode verifies remote module resolution"
 }
