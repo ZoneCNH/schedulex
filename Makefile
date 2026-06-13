@@ -1,6 +1,6 @@
 SHELL := /bin/sh
 
-VERSION ?= v0.1.0
+VERSION ?= v1.0.0
 GOAL_ID ?= GOAL-20260604-SCHEDULEX-001
 
 .PHONY: require-gowork-off
@@ -60,7 +60,7 @@ p1-governance-check: require-gowork-off
 p2-runtime-check: require-gowork-off
 	./scripts/check_governance.sh p2
 
-score: require-gowork-off
+score: require-gowork-off evidence
 	./scripts/check_schedulex_score.sh --min 9.8
 
 score-check: score
@@ -103,6 +103,7 @@ schedulex-check: identity-check contracts api-check trigger-determinism-check mi
 schedulex-checks: schedulex-check
 
 release-preflight: schedulex-check evidence release-final-check
+	./scripts/check_release_preflight.sh "$(VERSION)"
 
 ci: require-gowork-off fmt vet lint test race boundary contracts docs-check security
 
