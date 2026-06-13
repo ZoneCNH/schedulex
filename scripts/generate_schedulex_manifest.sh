@@ -9,7 +9,7 @@ fi
 manifest="release/manifest/latest.json"
 checksum="release/manifest/latest.json.sha256"
 module="$(go list -m)"
-version="${VERSION:-v0.1.0}"
+version="${VERSION:-v1.0.0}"
 goal_id="${GOAL_ID:-GOAL-20260604-SCHEDULEX-001}"
 go_version="$(go version | tr -d '\n')"
 git_commit="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -146,6 +146,14 @@ EOF_JSON
 if [[ "$mode" == "check" ]]; then
   [[ -f "$manifest" ]] || { echo "missing $manifest"; exit 1; }
   [[ -f "$checksum" ]] || { echo "missing $checksum"; exit 1; }
+  grep -q '"module": "github.com/ZoneCNH/schedulex"' "$manifest" || {
+    echo "ERROR: manifest module drift" >&2
+    exit 1
+  }
+  grep -q "\"version\": \"$version\"" "$manifest" || {
+    echo "ERROR: manifest version drift: expected $version" >&2
+    exit 1
+  }
   expected="$(sha256sum "$manifest" | awk '{print $1}')  latest.json"
   actual="$(cat "$checksum")"
   if [[ "$expected" != "$actual" ]]; then
@@ -153,6 +161,7 @@ if [[ "$mode" == "check" ]]; then
     exit 1
   fi
 else
+  mkdir -p "$(dirname "$manifest")"
   mv "$tmp" "$manifest"
   (cd "$(dirname "$manifest")" && sha256sum "$(basename "$manifest")") > "$checksum"
 fi

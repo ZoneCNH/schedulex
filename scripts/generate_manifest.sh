@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
-version="${1:-v0.1.0}"
+version="${1:-${VERSION:-v1.0.0}}"
 mkdir -p release/manifest
 cat > release/manifest/latest.json <<JSON
 {

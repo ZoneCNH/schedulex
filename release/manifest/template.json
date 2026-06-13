@@ -1,6 +1,6 @@
 {
   "module": "{{MODULE_PATH}}",
-  "version": "v0.4.6",
+  "version": "{{VERSION}}",
   "commit": "{{COMMIT}}",
   "tree_sha": "{{TREE_SHA}}",
   "source_digest": "{{SOURCE_DIGEST}}",
