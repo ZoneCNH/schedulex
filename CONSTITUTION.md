@@ -1,38 +1,10 @@
-# schedulex 宪章
+# schedulex 发布治理宪章
 
-本仓库是 `github.com/ZoneCNH/schedulex` 的可审计发布源。目标是提供一个标准库依赖、确定性、可测试的 Go 调度器基座。
+本仓库是 `github.com/ZoneCNH/schedulex` L1 deterministic scheduler 的可审计源。所有发布、治理和证据相关命令默认使用 `GOWORK=off`，并以可复现 contract、fixture、manifest 和 checksum 作为发布依据。
 
-## 权威顺序
+1. `docs/standard/`、`docs/spec.md`、`docs/api.md` 和 `docs/release.md` 描述人类可读的调度器契约与发布流程。
+2. `contracts/` 保存公共 API snapshot、golden cases、schema 和 release manifest contract；版本元数据必须与 `pkg/schedulex.Version`、README 和 release docs 一致。
+3. `scripts/` 与 `Makefile` 描述机器可执行的 release gates，包括 docs、boundary、contract、downstream smoke、manifest 和 preflight 校验。
+4. `release/manifest/` 与 `release/downstream-adoption/` 保存发布证据模板、fixture 或生成产物；`latest.json` 与 `.sha256` 必须成对更新并可校验。
 
-1. `pkg/schedulex/` 与 `contracts/` 定义公共 API 和兼容性边界。
-2. `Makefile` 与 `scripts/` 定义本地 gate 和发布流程。
-3. `docs/`、`README.md`、`STATUS.md` 定义用户可见状态和发布说明。
-4. `release/` 定义 manifest、下游采纳 fixture 与发布证据。
-
-## 发布不变量
-
-- 生产代码只依赖 Go 标准库。
-- `ModuleName` 固定为 `github.com/ZoneCNH/schedulex`。
-- v1.0.0 发布面必须统一到 `schedulex.Version == "v1.0.0"`。
-- 发布 manifest 必须由脚本生成并校验 checksum；不要手写生成产物。
-- downstream fixture 不允许本地 `replace`。
-- 活跃示例和文档不得绑定业务域词；历史归档可以保留原始上下文。
-
-## 变更纪律
-
-- 不在 `main` 上直接开发；使用 release/feature branch 后再合入。
-- 每个提交聚焦一个发布或修复目的，并使用 Lore commit trailers。
-- 公共 API 变化必须同时更新 snapshot、文档、契约测试和发布说明。
-- 发布前必须运行最小证明链：`git diff --check`、fmt、vet、unit、race、boundary、contracts、docs-check、release-preflight。
-
-## 验收
-
-v1.0.0 可发布的最低证据：
-
-- `GOWORK=off go test ./...`
-- `GOWORK=off go vet ./...`
-- `GOWORK=off make race`
-- `GOWORK=off make boundary`
-- `GOWORK=off make contracts`
-- `GOWORK=off make docs-check`
-- `GOWORK=off make release-preflight VERSION=v1.0.0`
+任何 release 变更必须先更新 contract 与文档，再运行相应门禁。不得用占位文件伪造下游采用或远端 module fetch 通过证据；发布前可以声明 fixture no-local-replace contract 通过，发布后必须用远端网络模式复核 tag 可解析性。

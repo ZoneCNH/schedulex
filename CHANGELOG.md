@@ -6,6 +6,18 @@
 
 ## v1.0.0 - 2026-06-13
 
+### 变更
+
+- 对齐 schedulex 发布口径到 `v1.0.0`，同步公共 API snapshot、release manifest schema、README、发布文档和下游采用 fixture。
+- 重写治理宪章，移除遗留 `xlib-standard` / `goalcli` 发布语义，明确 schedulex contract、manifest、checksum 与 downstream smoke 的证据边界。
+- 下游采用证据更新为 no-local-replace fixture contract；远端 module fetch 明确为 tag 发布后的网络复核步骤。
+
+### 验证
+
+- 发布前应运行 `GOWORK=off make release-preflight VERSION=v1.0.0`，并在最终声明中附上 `DONE with evidence:`。
+
+## v0.4.6 - 2026-06-04
+
 ### 发布
 
 - 发布 `github.com/ZoneCNH/schedulex` L1 deterministic scheduler 稳定版。
