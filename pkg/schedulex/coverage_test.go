@@ -140,12 +140,8 @@ func TestEmit_NilSink(t *testing.T) {
 	if err := s.AddJob(job, Every(time.Hour)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Start(context.Background()); err != nil {
-		t.Fatal(err)
-	}
 	state := s.jobs["nil-sink"]
 	s.emit(context.Background(), s.event(state, EventScheduled, clock.Now()))
-	shutdownScheduler(t, s)
 }
 
 // scheduler-level sink 正常接收事件
@@ -162,15 +158,11 @@ func TestEmit_SchedulerSink(t *testing.T) {
 	if err := s.AddJob(job, Every(time.Hour)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Start(context.Background()); err != nil {
-		t.Fatal(err)
-	}
 	state := s.jobs["sink-test"]
 	s.emit(context.Background(), s.event(state, EventScheduled, clock.Now()))
 	if atomic.LoadInt32(&received) != 1 {
 		t.Fatalf("expected 1 event, got %d", received)
 	}
-	shutdownScheduler(t, s)
 }
 
 // job-level sink 也被调用
@@ -189,9 +181,6 @@ func TestEmit_JobLevelSink(t *testing.T) {
 	}))); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Start(context.Background()); err != nil {
-		t.Fatal(err)
-	}
 	state := s.jobs["job-sink"]
 	s.emit(context.Background(), s.event(state, EventScheduled, clock.Now()))
 	if atomic.LoadInt32(&schedulerEvents) != 1 {
@@ -200,7 +189,6 @@ func TestEmit_JobLevelSink(t *testing.T) {
 	if atomic.LoadInt32(&jobEvents) != 1 {
 		t.Fatalf("job sink expected 1, got %d", jobEvents)
 	}
-	shutdownScheduler(t, s)
 }
 
 // nil ctx → 不应 panic
@@ -214,12 +202,8 @@ func TestEmit_NilContext(t *testing.T) {
 	if err := s.AddJob(job, Every(time.Hour)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Start(context.Background()); err != nil {
-		t.Fatal(err)
-	}
 	state := s.jobs["nil-ctx"]
 	s.emit(context.Background(), s.event(state, EventScheduled, clock.Now()))
-	shutdownScheduler(t, s)
 }
 
 // ────────────────────────────────────────────────────────────────
