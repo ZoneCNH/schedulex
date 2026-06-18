@@ -15,7 +15,7 @@ concurrency:
 jobs:
   ci:
     name: ci
-    runs-on: [self-hosted, Linux, X64, sre/foundation-l1]
+    runs-on: ubuntu-latest
     env:
       GOWORK: off
     steps:
@@ -40,7 +40,7 @@ jobs:
 
   release-check:
     name: release-check
-    runs-on: [self-hosted, Linux, X64, sre/foundation-l1]
+    runs-on: ubuntu-latest
     env:
       GOWORK: off
       VERSION: v1.0.0

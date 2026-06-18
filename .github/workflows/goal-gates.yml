@@ -17,7 +17,7 @@ concurrency:
 jobs:
   gates:
     name: gates
-    runs-on: [self-hosted, Linux, X64, sre/foundation-l1]
+    runs-on: ubuntu-latest
     env:
       GOWORK: off
       VERSION: v1.0.0
