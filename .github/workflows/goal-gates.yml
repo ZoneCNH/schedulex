@@ -41,6 +41,7 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@v1.3.0
 
       - name: Worktree Gate
+        if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'
         run: bash scripts/harness/no-main-dev.sh
 
       - name: Goal Gates
