@@ -42,17 +42,50 @@ if [[ "$package_name" != "schedulex" && -e "$repo_dir/pkg/schedulex" ]]; then
   exit 1
 fi
 
+rg_render_excludes=(
+  --glob '!.git/**'
+  --glob '!**/.git/**'
+  --glob '!coverage.out'
+  --glob '!**/coverage.out'
+  --glob '!cover.out'
+  --glob '!**/cover.out'
+  --glob '!pkg.out'
+  --glob '!**/pkg.out'
+  --glob '!coverage.*'
+  --glob '!**/coverage.*'
+  --glob '!*.coverprofile'
+  --glob '!**/*.coverprofile'
+  --glob '!profile.cov'
+  --glob '!**/profile.cov'
+  --glob '!*.cov'
+  --glob '!**/*.cov'
+  --glob '!*.test'
+  --glob '!**/*.test'
+)
+
+grep_render_excludes=(
+  --exclude-dir=.git
+  --exclude='coverage.out'
+  --exclude='cover.out'
+  --exclude='pkg.out'
+  --exclude='coverage.*'
+  --exclude='*.coverprofile'
+  --exclude='profile.cov'
+  --exclude='*.cov'
+  --exclude='*.test'
+)
+
 scan_regex() {
   local pattern="$1"
   local label="$2"
 
   if command -v rg >/dev/null 2>&1; then
-    if rg -n --hidden --glob '!.git/**' "$pattern" "$repo_dir"; then
+    if rg -n --hidden "${rg_render_excludes[@]}" "$pattern" "$repo_dir"; then
       echo "ERROR: found stale $label" >&2
       exit 1
     fi
   else
-    if grep -RInE --exclude-dir=.git "$pattern" "$repo_dir"; then
+    if grep -RInE "${grep_render_excludes[@]}" "$pattern" "$repo_dir"; then
       echo "ERROR: found stale $label" >&2
       exit 1
     fi
@@ -64,12 +97,12 @@ scan_fixed() {
   local label="$2"
 
   if command -v rg >/dev/null 2>&1; then
-    if rg -n --hidden --glob '!.git/**' --fixed-strings "$pattern" "$repo_dir"; then
+    if rg -n --hidden "${rg_render_excludes[@]}" --fixed-strings "$pattern" "$repo_dir"; then
       echo "ERROR: found stale $label" >&2
       exit 1
     fi
   else
-    if grep -RInF --exclude-dir=.git "$pattern" "$repo_dir"; then
+    if grep -RInF "${grep_render_excludes[@]}" "$pattern" "$repo_dir"; then
       echo "ERROR: found stale $label" >&2
       exit 1
     fi

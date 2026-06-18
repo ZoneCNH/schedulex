@@ -25,6 +25,9 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
+      - name: Add Go bin to PATH
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
       - name: Install golangci-lint
         run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
 
@@ -37,7 +40,7 @@ jobs:
           export WORKFLOW_RUN_ID="${{ github.run_id }}"
           export ARTIFACT_NAME="release-manifest-${{ github.run_id }}"
           export ARTIFACT_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          GOWORK=off make release-final-check
+          GOWORK=off make release-check VERSION="${VERSION}"
 
       - name: Hash release evidence
         if: always()
