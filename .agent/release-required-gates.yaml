@@ -1,13 +1,13 @@
 schema_version: "1.0"
-module: xlib-standard
+module: schedulex
 source_harness: .agent/harness.yaml
 truth_state: .agent/truth-state.yaml
-purpose: "列出 release required gate 与 first-PR/MVA 当前证据等级；本文件不运行 gate、不改变 release-check。"
+purpose: "定义 schedulex v1.0.0 发布必须运行的本地与 CI gate；本文件不运行 gate、不生成 evidence。"
+release_version: v1.0.0
 
 mva_assertions:
-  does_not_run_release_gates: true
-  does_not_generate_release_manifest: true
-  does_not_change_release_check: true
+  release_manifest_generated_by: "GOWORK=off make evidence"
+  release_gate_entrypoint: "GOWORK=off make release-check"
   does_not_cut_release_manifest_over: true
 
 required_release_evidence:
@@ -24,128 +24,88 @@ required_release_evidence:
   - gates
   - timestamp
 
+required_ci_status_checks:
+  - ci
+  - release-check
+  - security
+  - integration
+  - gates
+  - worktree-check
+
 gates:
   - id: fmt
-    command: "make fmt"
+    command: "GOWORK=off make fmt"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
   - id: vet
-    command: "make vet"
+    command: "GOWORK=off make vet"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
   - id: lint
-    command: "make lint"
+    command: "GOWORK=off make lint"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
   - id: test
-    command: "make test"
+    command: "GOWORK=off make test"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
   - id: race
-    command: "make race"
+    command: "GOWORK=off make race"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
+  - id: build
+    command: "GOWORK=off make build"
+    required_for_release: true
   - id: boundary
     command: "GOWORK=off make boundary"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: security
-    command: "GOWORK=off make security"
-    required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
   - id: contracts
     command: "GOWORK=off make contracts"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
   - id: docs_check
     command: "GOWORK=off make docs-check"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: dependency_check
-    command: "GOWORK=off make dependency-check"
+  - id: security
+    command: "GOWORK=off make security"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: standard_impact_check
-    command: "GOWORK=off make standard-impact-check"
+  - id: api_check
+    command: "GOWORK=off make api-check"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
+  - id: downstream_smoke
+    command: "GOWORK=off make downstream-smoke"
+    required_for_release: true
+  - id: integration
+    command: "GOWORK=off make integration"
+    required_for_release: true
+  - id: schedulex_check
+    command: "GOWORK=off make schedulex-check"
+    required_for_release: true
   - id: governance_check
     command: "GOWORK=off make governance-check"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
   - id: p1_governance_check
     command: "GOWORK=off make p1-governance-check"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
   - id: p2_runtime_check
     command: "GOWORK=off make p2-runtime-check"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: integration
-    command: "make integration"
-    required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: score_check
-    command: "go run ./cmd/goalcli score --min 9.8"
-    required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: release_check
-    command: "GOWORK=off make release-check"
-    required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: release_final_check
-    command: "XLIB_CONTEXT=release_verify GOWORK=off make release-final-check"
-    required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: release_preflight
-    command: "XLIB_CONTEXT=release_verify GOWORK=off make release-preflight VERSION=v0.4.3"
-    required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
   - id: evidence_manifest
-    command: "CHECK_STATUS=passed GOWORK=off make evidence"
+    command: "GOWORK=off make evidence"
     required_for_release: true
-    current_mva_state: not_generated_in_mva
-    artifact_state: not_generated_in_mva
-    release_usable: false
-  - id: release_evidence_hash
-    command: "GOWORK=off make release-evidence-hash"
+  - id: release_final_check
+    command: "GOWORK=off make release-final-check"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: release_evidence_check
-    command: "RELEASE_EVIDENCE_REQUIRE_PASSED=1 GOWORK=off make release-evidence-check"
+  - id: score_check
+    command: "GOWORK=off make score"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
-  - id: release_evidence_checksum_check
-    command: "GOWORK=off make release-evidence-checksum-check"
+    threshold: 9.8
+  - id: release_preflight
+    command: "GOWORK=off make release-preflight VERSION=v1.0.0"
     required_for_release: true
-    current_mva_state: not_run
-    release_usable: false
+  - id: ci_extended
+    command: "GOWORK=off make ci-extended VERSION=v1.0.0"
+    required_for_release: true
+  - id: release_check
+    command: "GOWORK=off make release-check VERSION=v1.0.0"
+    required_for_release: true
 
 forbidden_upgrades:
-  - "not_run != passed"
-  - "CHECK_STATUS=passed != release-ready evidence"
-  - "not_generated_in_mva != release manifest available"
-  - "local governance-check pass != release gate pass"
-  - "manifest_covered 不得记为 release_usable。"
-  - "本地 governance-check 通过不得替代 release evidence manifest。"
+  - "requires_fresh_run != passed"
+  - "local manifest artifact != GitHub Release evidence"
+  - "release-final-check != release-check"
+  - "tag exists != GitHub Release published"

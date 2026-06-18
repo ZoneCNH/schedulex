@@ -17,6 +17,9 @@
   },
   "rules": [
     {
+      "type": "required_signatures"
+    },
+    {
       "type": "non_fast_forward"
     },
     {
